@@ -1,12 +1,12 @@
 // Three.js WebGPU Particle Simulation for Webflow
 // GitHub: PatchBlack/webflow-particle-simulation
 
-import * as THREE from 'https://cdn.jsdelivr.net/gh/PatchBlack/webflow-particle-simulation@main/three/build/three.webgpu.js';
-import { HDRLoader } from 'https://cdn.jsdelivr.net/gh/PatchBlack/webflow-particle-simulation@main/three/examples/jsm/loaders/HDRLoader.js';
-import { GLTFLoader } from 'https://cdn.jsdelivr.net/gh/PatchBlack/webflow-particle-simulation@main/three/examples/jsm/loaders/GLTFLoader.js';
-import * as BufferGeometryUtils from 'https://cdn.jsdelivr.net/gh/PatchBlack/webflow-particle-simulation@main/three/examples/jsm/utils/BufferGeometryUtils.js';
-import WebGPU from 'https://cdn.jsdelivr.net/gh/PatchBlack/webflow-particle-simulation@main/three/examples/jsm/capabilities/WebGPU.js';
-import { RenderTarget } from 'https://cdn.jsdelivr.net/gh/PatchBlack/webflow-particle-simulation@main/three/build/three.webgpu.js';
+import * as THREE from 'three';
+import { HDRLoader } from 'three/addons/loaders/HDRLoader.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js';
+import WebGPU from 'three/addons/capabilities/WebGPU.js';
+import { RenderTarget } from 'three';
 
 import {
   Fn,
@@ -38,7 +38,7 @@ import {
   uv,
   vec2,
   texture,
-} from 'https://cdn.jsdelivr.net/gh/PatchBlack/webflow-particle-simulation@main/three/build/three.tsl.js';
+} from 'three/tsl';
 
 // Base CDN URL for assets
 const ASSET_BASE_URL = 'https://cdn.jsdelivr.net/gh/PatchBalck/webflow-particle-simulation@main';
