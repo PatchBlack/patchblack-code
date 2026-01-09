@@ -2,11 +2,11 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'https://cdn.jsdelivr.net/gh/PatchBlack/patchblack-code@565e7a37b605f883ee664095e115d5f33288d004/three/examples/jsm/loaders/GLTFLoader.js';
 import { HDRLoader } from 'https://cdn.jsdelivr.net/gh/PatchBlack/patchblack-code@73f47cd896c38d0c70f5ef6ae391ef81a0a61fe0/three/examples/jsm/loaders/HDRLoader.js';
-import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
-import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
-import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
-import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
-import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { RGBELoader } from 'https://cdn.jsdelivr.net/gh/PatchBlack/patchblack-code@f6307946789497b78ae3eb4687bc3040332b3c6d/three/examples/jsm/loaders/RGBELoader.js';
+import { EffectComposer } from 'https://cdn.jsdelivr.net/gh/PatchBlack/patchblack-code@f6307946789497b78ae3eb4687bc3040332b3c6d/three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'https://cdn.jsdelivr.net/gh/PatchBlack/patchblack-code@f6307946789497b78ae3eb4687bc3040332b3c6d/three/examples/jsm/postprocessing/RenderPass.js';
+import { ShaderPass } from 'https://cdn.jsdelivr.net/gh/PatchBlack/patchblack-code@f6307946789497b78ae3eb4687bc3040332b3c6d/three/examples/jsm/postprocessing/ShaderPass.js';
+import { OutputPass } from 'https://cdn.jsdelivr.net/gh/PatchBlack/patchblack-code@f6307946789497b78ae3eb4687bc3040332b3c6d/three/examples/jsm/postprocessing/OutputPass.js';
 
 // Check if container exists
 const container = document.getElementById('boombox-hero-container');
