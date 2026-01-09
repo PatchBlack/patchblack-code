@@ -68,6 +68,8 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.2;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
+// Ensure canvas does not block clicks underneath if needed, though we usually want it to catch 3D clicks
+renderer.domElement.style.zIndex = '1'; 
 document.getElementById('canvas-container').appendChild(renderer.domElement);
 
 // ===== POST-PROCESSING =====
@@ -94,16 +96,13 @@ rgbeLoader.load(
 
 // ===== LIGHTING =====
 scene.add(new THREE.AmbientLight(0xb0bbcb, 0.6));
-
 const keyLight = new THREE.DirectionalLight(0xb0bbcb, 5);
 keyLight.position.set(5, 8, 5);
 keyLight.castShadow = true;
 scene.add(keyLight);
-
 const rimLight = new THREE.DirectionalLight(0xb0bbcb, 1.5);
 rimLight.position.set(-5, 3, -5);
 scene.add(rimLight);
-
 const fillLight = new THREE.DirectionalLight(0xb0bbcb, 0.5);
 fillLight.position.set(0, -3, 5);
 scene.add(fillLight);
@@ -116,7 +115,9 @@ audio.preload = "auto";
 
 let isPlaying = false;
 
-const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+// Initialize AudioContext safely
+const AudioContext = window.AudioContext || window.webkitAudioContext;
+const audioContext = new AudioContext();
 const audioSource = audioContext.createMediaElementSource(audio);
 const analyser = audioContext.createAnalyser();
 analyser.fftSize = 64;
@@ -198,23 +199,10 @@ let mixer = null;
 let tapeAction = null;
 const clock = new THREE.Clock();
 
-// ===== BUTTON REFERENCES =====
+// ===== BUTTON REFERENCES & GSAP =====
 let playButton = null;
 let pauseButton = null;
 const buttonInitialRotations = new Map();
-
-function animateButton(button, targetRotation) {
-  if (!button) return;
-
-  const initialRotation = buttonInitialRotations.get(button);
-  const targetRad = THREE.MathUtils.degToRad(targetRotation);
-
-  gsap.to(button.rotation, {
-    x: initialRotation.x + targetRad,
-    duration: 0.3,
-    ease: "power2.out"
-  });
-}
 
 const gsap = {
   to: (target, props) => {
@@ -241,17 +229,26 @@ const gsap = {
   }
 };
 
-// ===== BUTTON POSITIONING (UPDATED) =====
+function animateButton(button, targetRotation) {
+  if (!button) return;
+  const initialRotation = buttonInitialRotations.get(button);
+  const targetRad = THREE.MathUtils.degToRad(targetRotation);
+  gsap.to(button.rotation, {
+    x: initialRotation.x + targetRad,
+    duration: 0.3,
+    ease: "power2.out"
+  });
+}
+
+// ===== BUTTON POSITIONING =====
 function updateButtonPosition() {
   if (!boombox) return;
   
-  // Calculate bounding box in world space
   const box = new THREE.Box3().setFromObject(boombox);
   const bottomY = box.min.y;
   const centerX = (box.min.x + box.max.x) / 2;
   const centerZ = (box.min.z + box.max.z) / 2;
   
-  // Project to 2D screen space
   const screenPosition = new THREE.Vector3(centerX, bottomY, centerZ);
   screenPosition.project(camera);
   
@@ -260,10 +257,13 @@ function updateButtonPosition() {
   
   const button = document.getElementById('custom-cursor');
   if (button) {
-    // Add some padding below the object (e.g., +40px)
+    // Force styling to ensure it sits on top
+    button.style.position = 'absolute';
+    button.style.zIndex = '1000'; // CRITICAL FIX: Ensure it is above canvas
     button.style.left = x + 'px';
-    button.style.top = (y + 40) + 'px'; 
+    button.style.top = (y + 40) + 'px'; // 40px padding below object
     button.style.transform = 'translate(-50%, 0)';
+    button.style.display = 'flex';
   }
 }
 
@@ -271,36 +271,25 @@ function updateButtonPosition() {
 const mouse = { x: 0, y: 0 };
 const targetRotation = { x: 0, y: 0 };
 const currentRotation = { x: 0, y: 0 };
-const clickMouse = new THREE.Vector2();
-const raycaster = new THREE.Raycaster();
 
 window.addEventListener('mousemove', (event) => {
   mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
   mouse.y = (event.clientY / window.innerHeight) * 2 - 1;
 
-  // Simple rotation logic based on mouse position
   targetRotation.y = mouse.x * THREE.MathUtils.degToRad(20);
   targetRotation.x = mouse.y * THREE.MathUtils.degToRad(10);
 });
 
-// ===== TEXT ANIMATION (UPDATED) =====
+// ===== TEXT ANIMATION =====
 function updateCursorText() {
-  const customCursor = document.getElementById('custom-cursor');
   const cursorText = document.getElementById('cursor-text');
+  if (!cursorText) return;
   
-  if (!customCursor || !cursorText) return;
-  
-  // Always active now
-  customCursor.classList.add('active');
   const newText = isPlaying ? 'PAUSE' : 'PLAY';
-  animateTextChange(cursorText, newText);
-}
+  
+  if (cursorText.textContent.trim() === newText) return;
 
-function animateTextChange(element, newText) {
-  const currentText = element.textContent;
-  if (currentText === newText) return;
-
-  element.innerHTML = '';
+  cursorText.innerHTML = '';
   const letters = newText.split('');
 
   letters.forEach((letter, index) => {
@@ -317,13 +306,13 @@ function animateTextChange(element, newText) {
     span2.textContent = letter;
     wrapper.appendChild(span2);
 
-    element.appendChild(wrapper);
+    cursorText.appendChild(wrapper);
 
     setTimeout(() => wrapper.classList.add('animate'), index * 50);
   });
 }
 
-// ===== LOAD MODEL =====
+// ===== MODEL LOADER =====
 let boombox = null;
 
 const loader = new GLTFLoader();
@@ -331,7 +320,6 @@ loader.load(
   `${ASSET_BASE}/assets/models/Boombox-01.glb`,
   (gltf) => {
     boombox = gltf.scene;
-
     const box = new THREE.Box3().setFromObject(boombox);
     const center = box.getCenter(new THREE.Vector3());
     boombox.position.sub(center);
@@ -339,21 +327,12 @@ loader.load(
     gltf.scene.traverse((child) => {
       if (child.name === 'play-button') {
         playButton = child;
-        buttonInitialRotations.set(playButton, {
-          x: child.rotation.x,
-          y: child.rotation.y,
-          z: child.rotation.z
-        });
+        buttonInitialRotations.set(playButton, { x: child.rotation.x, y: child.rotation.y, z: child.rotation.z });
       }
       if (child.name === 'pause-button') {
         pauseButton = child;
-        buttonInitialRotations.set(pauseButton, {
-          x: child.rotation.x,
-          y: child.rotation.y,
-          z: child.rotation.z
-        });
+        buttonInitialRotations.set(pauseButton, { x: child.rotation.x, y: child.rotation.y, z: child.rotation.z });
       }
-
       if (child.isMesh) {
         if (child.name === 'Speakers_001' || child.name === 'Speakers_002') {
           const originalMaterial = child.material.clone();
@@ -362,18 +341,14 @@ loader.load(
           originalMaterial.emissiveMap = canvasTexture;
           originalMaterial.emissiveIntensity = 1.5;
           originalMaterial.transparent = true;
-
           canvasTexture.center.set(0.5, 0.5);
           canvasTexture.repeat.set(1.5, -1.5);
           canvasTexture.offset.set(0, -0.15);
-
           child.material = originalMaterial;
           child.material.needsUpdate = true;
-        } else {
-          if (child.material) {
-            child.material.envMapIntensity = 1.5;
-            child.material.needsUpdate = true;
-          }
+        } else if (child.material) {
+          child.material.envMapIntensity = 1.5;
+          child.material.needsUpdate = true;
         }
       }
     });
@@ -386,150 +361,113 @@ loader.load(
     }
 
     scene.add(boombox);
-    handleResponsiveness(); // Initial positioning
-    
-    // Initialize UI state once model is ready
-    updateCursorText();
-    
+    handleResponsiveness();
     drawWaveform();
+    
+    // Ensure button is ready when model is loaded
+    ensureButtonExists();
+    updateCursorText();
     console.log('Boombox loaded successfully!');
   },
   undefined,
   (error) => console.error('Error loading model:', error)
 );
 
-// ===== 3D CLICK HANDLER (Optional Fallback) =====
-window.addEventListener('click', (event) => {
-  if (!boombox) return;
-  // Don't interfere if clicking the DOM button
-  if (event.target.closest('#custom-cursor')) return;
-
-  clickMouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-  clickMouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-  raycaster.setFromCamera(clickMouse, camera);
-  const intersects = raycaster.intersectObject(boombox, true);
-
-  if (intersects.length > 0) {
-    toggleAudio();
-  }
-});
-
-// ===== BUTTON INITIALIZATION (UPDATED) =====
-function initButtonState() {
-  const btn = document.getElementById('custom-cursor');
-  const cursorText = document.getElementById('cursor-text');
-  
-  if (btn && cursorText) {
-    // Force active state for everyone
-    btn.classList.add('active');
-    
-    // Set initial text
-    cursorText.innerHTML = '';
-    const letters = 'PLAY'.split('');
-    letters.forEach((letter) => {
-      const wrapper = document.createElement('span');
-      wrapper.className = 'letter-wrapper';
-      const span1 = document.createElement('span');
-      span1.className = 'letter';
-      span1.textContent = letter;
-      wrapper.appendChild(span1);
-      const span2 = document.createElement('span');
-      span2.className = 'letter';
-      span2.textContent = letter;
-      wrapper.appendChild(span2);
-      cursorText.appendChild(wrapper);
-    });
-    
-    // Universal Click Listener
-    btn.addEventListener('click', (event) => {
-      event.stopPropagation();
-      // Resume context first (fix for mobile policies)
-      if (audioContext.state === "suspended") {
-        audioContext.resume().then(() => {
-          if (boombox) toggleAudio();
-        });
-      } else {
-        if (boombox) toggleAudio();
-      }
-    });
+// ===== AUDIO TOGGLE LOGIC =====
+function toggleAudio() {
+  // Always try to resume context first (Chrome/Safari requirement)
+  if (audioContext.state === "suspended") {
+    audioContext.resume().then(() => performToggle()).catch(console.error);
+  } else {
+    performToggle();
   }
 }
 
-window.addEventListener('DOMContentLoaded', initButtonState);
-
-// ===== AUDIO TOGGLE =====
-function toggleAudio() {
+function performToggle() {
   if (isPlaying) {
     audio.pause();
     if (tapeAction) tapeAction.paused = true;
     if (pauseButton) animateButton(pauseButton, 16);
     isPlaying = false;
   } else {
-    // Double check context state
-    if (audioContext.state === "suspended") {
-      audioContext.resume();
-    }
-
-    audio.play().then(() => {
-      if (tapeAction) {
-        if (!tapeAction.isRunning()) tapeAction.play();
-        tapeAction.paused = false;
-      }
-      
-      // Reset pause button if needed, animate play button
-      if (pauseButton && buttonInitialRotations.has(pauseButton)) {
-        const currentPauseRotation = pauseButton.rotation.x;
-        const initialPauseRotation = buttonInitialRotations.get(pauseButton).x;
-        
-        if (Math.abs(currentPauseRotation - initialPauseRotation) > 0.1) {
-          animateButton(pauseButton, 0);
-        } else {
-          animateButton(playButton, 16);
+    const playPromise = audio.play();
+    if (playPromise !== undefined) {
+      playPromise.then(() => {
+        if (tapeAction) {
+          if (!tapeAction.isRunning()) tapeAction.play();
+          tapeAction.paused = false;
         }
-      } else {
+        if (pauseButton) animateButton(pauseButton, 0);
         animateButton(playButton, 16);
-      }
-      
-      isPlaying = true;
-      updateCursorText(); // Update text to 'PAUSE'
-    }).catch(err => {
-      console.warn("Audio failed to play:", err);
-    });
+        isPlaying = true;
+        updateCursorText();
+      }).catch(error => {
+        console.error("Playback failed:", error);
+      });
+    }
   }
   updateCursorText();
+}
+
+// ===== UI SAFETY INJECTION =====
+// This ensures the button exists in the DOM with correct styles even if HTML is missing
+function ensureButtonExists() {
+  let btn = document.getElementById('custom-cursor');
+  
+  if (!btn) {
+    console.log("Creating custom-cursor element...");
+    btn = document.createElement('div');
+    btn.id = 'custom-cursor';
+    btn.innerHTML = '<div id="cursor-text">PLAY</div>';
+    document.body.appendChild(btn);
+  }
+
+  // Force critical styles to ensure it works
+  Object.assign(btn.style, {
+    position: 'absolute',
+    zIndex: '9999', // Very high Z-index
+    pointerEvents: 'auto', // Ensure it captures clicks
+    cursor: 'pointer',
+    // Add basic styling if missing
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100px', // Fallback sizing
+    height: '40px'
+  });
+  
+  // Attach event listener explicitly
+  // Remove old listeners by cloning node if necessary, but simple add is usually fine here
+  btn.onclick = (e) => {
+    e.stopPropagation();
+    console.log("Button clicked!"); // Debug log
+    toggleAudio();
+  };
+
+  const cursorText = document.getElementById('cursor-text');
+  if(cursorText) cursorText.style.pointerEvents = 'none'; // Text shouldn't block click
 }
 
 // ===== ANIMATION LOOP =====
 function animate() {
   requestAnimationFrame(animate);
-
   const delta = clock.getDelta();
 
-  if (mixer && isPlaying) {
-    mixer.update(delta);
-  }
-
+  if (mixer && isPlaying) mixer.update(delta);
   drawWaveform();
 
   if (boombox) {
-    // Rotation logic
     currentRotation.x += (targetRotation.x - currentRotation.x) * 0.05;
     currentRotation.y += (targetRotation.y - currentRotation.y) * 0.05;
-
     boombox.rotation.x = currentRotation.x;
     boombox.rotation.y = currentRotation.y;
-    
-    // Updates position for ALL devices now
     updateButtonPosition();
   }
-
   composer.render();
 }
-
 animate();
 
-// ===== WINDOW RESIZE / RESPONSIVENESS =====
+// ===== RESIZE & RESPONSIVENESS =====
 function handleResponsiveness() {
   if (!boombox) return;
   
@@ -543,8 +481,7 @@ function handleResponsiveness() {
     boombox.rotation.z = 0;
     boombox.scale.set(1, 1, 1);
   }
-
-  // Recalculate center
+  
   const box = new THREE.Box3().setFromObject(boombox);
   const center = box.getCenter(new THREE.Vector3());
   boombox.position.sub(center);
@@ -557,8 +494,7 @@ window.addEventListener('resize', () => {
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
   composer.setSize(window.innerWidth, window.innerHeight);
-  
   handleResponsiveness();
 });
 
-console.log('Boombox experience initialized');
+window.addEventListener('DOMContentLoaded', ensureButtonExists);
