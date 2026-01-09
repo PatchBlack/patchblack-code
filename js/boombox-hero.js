@@ -68,8 +68,12 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.2;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
-// Ensure canvas does not block clicks underneath if needed, though we usually want it to catch 3D clicks
-renderer.domElement.style.zIndex = '1'; 
+
+// Set z-index to 1 so it sits behind the UI but handles 3D rendering
+renderer.domElement.style.zIndex = '1';
+renderer.domElement.style.position = 'absolute';
+renderer.domElement.style.top = '0';
+renderer.domElement.style.left = '0';
 document.getElementById('canvas-container').appendChild(renderer.domElement);
 
 // ===== POST-PROCESSING =====
@@ -115,7 +119,7 @@ audio.preload = "auto";
 
 let isPlaying = false;
 
-// Initialize AudioContext safely
+// Initialize AudioContext
 const AudioContext = window.AudioContext || window.webkitAudioContext;
 const audioContext = new AudioContext();
 const audioSource = audioContext.createMediaElementSource(audio);
@@ -240,33 +244,6 @@ function animateButton(button, targetRotation) {
   });
 }
 
-// ===== BUTTON POSITIONING =====
-function updateButtonPosition() {
-  if (!boombox) return;
-  
-  const box = new THREE.Box3().setFromObject(boombox);
-  const bottomY = box.min.y;
-  const centerX = (box.min.x + box.max.x) / 2;
-  const centerZ = (box.min.z + box.max.z) / 2;
-  
-  const screenPosition = new THREE.Vector3(centerX, bottomY, centerZ);
-  screenPosition.project(camera);
-  
-  const x = (screenPosition.x * 0.5 + 0.5) * window.innerWidth;
-  const y = (screenPosition.y * -0.5 + 0.5) * window.innerHeight;
-  
-  const button = document.getElementById('custom-cursor');
-  if (button) {
-    // Force styling to ensure it sits on top
-    button.style.position = 'absolute';
-    button.style.zIndex = '1000'; // CRITICAL FIX: Ensure it is above canvas
-    button.style.left = x + 'px';
-    button.style.top = (y + 40) + 'px'; // 40px padding below object
-    button.style.transform = 'translate(-50%, 0)';
-    button.style.display = 'flex';
-  }
-}
-
 // ===== MOUSE TRACKING =====
 const mouse = { x: 0, y: 0 };
 const targetRotation = { x: 0, y: 0 };
@@ -364,7 +341,7 @@ loader.load(
     handleResponsiveness();
     drawWaveform();
     
-    // Ensure button is ready when model is loaded
+    // UI Init
     ensureButtonExists();
     updateCursorText();
     console.log('Boombox loaded successfully!');
@@ -375,7 +352,6 @@ loader.load(
 
 // ===== AUDIO TOGGLE LOGIC =====
 function toggleAudio() {
-  // Always try to resume context first (Chrome/Safari requirement)
   if (audioContext.state === "suspended") {
     audioContext.resume().then(() => performToggle()).catch(console.error);
   } else {
@@ -409,43 +385,40 @@ function performToggle() {
   updateCursorText();
 }
 
-// ===== UI SAFETY INJECTION =====
-// This ensures the button exists in the DOM with correct styles even if HTML is missing
+// ===== UI STATIC SETUP =====
 function ensureButtonExists() {
   let btn = document.getElementById('custom-cursor');
   
   if (!btn) {
-    console.log("Creating custom-cursor element...");
+    console.log("Creating fixed UI button...");
     btn = document.createElement('div');
     btn.id = 'custom-cursor';
     btn.innerHTML = '<div id="cursor-text">PLAY</div>';
     document.body.appendChild(btn);
   }
 
-  // Force critical styles to ensure it works
+  // FORCE STATIC CSS
+  // This removes the "following" logic and keeps it at the bottom of the screen
   Object.assign(btn.style, {
-    position: 'absolute',
-    zIndex: '9999', // Very high Z-index
-    pointerEvents: 'auto', // Ensure it captures clicks
+    position: 'fixed',         // Fixed relative to viewport
+    bottom: '5%',              // 5% from the bottom
+    left: '50%',               // Centered horizontally
+    transform: 'translateX(-50%)', // Center alignment
+    zIndex: '1000',            // Above the canvas
+    pointerEvents: 'auto',     // Clickable
     cursor: 'pointer',
-    // Add basic styling if missing
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    width: '100px', // Fallback sizing
-    height: '40px'
+    padding: '10px 20px',      // Padding instead of fixed width
+    width: 'auto',             // Let it grow naturally
+    height: 'auto'             // Let it grow naturally
   });
   
-  // Attach event listener explicitly
-  // Remove old listeners by cloning node if necessary, but simple add is usually fine here
   btn.onclick = (e) => {
     e.stopPropagation();
-    console.log("Button clicked!"); // Debug log
     toggleAudio();
   };
-
-  const cursorText = document.getElementById('cursor-text');
-  if(cursorText) cursorText.style.pointerEvents = 'none'; // Text shouldn't block click
 }
 
 // ===== ANIMATION LOOP =====
@@ -457,11 +430,11 @@ function animate() {
   drawWaveform();
 
   if (boombox) {
+    // ONLY update model rotation, NOT button position
     currentRotation.x += (targetRotation.x - currentRotation.x) * 0.05;
     currentRotation.y += (targetRotation.y - currentRotation.y) * 0.05;
     boombox.rotation.x = currentRotation.x;
     boombox.rotation.y = currentRotation.y;
-    updateButtonPosition();
   }
   composer.render();
 }
@@ -486,7 +459,7 @@ function handleResponsiveness() {
   const center = box.getCenter(new THREE.Vector3());
   boombox.position.sub(center);
   
-  updateButtonPosition();
+  // Note: We removed updateButtonPosition() call here as it's no longer needed
 }
 
 window.addEventListener('resize', () => {
