@@ -1,7 +1,7 @@
 import {
 	Color
 } from 'three';
-import { Pass } from './Pass.js';
+import { Pass } from 'https://cdn.jsdelivr.net/gh/PatchBlack/patchblack-code@056fd2725802c8b26da204e140ba00b9db765a63/three/examples/jsm/postprocessing/Pass.js';
 
 /**
  * This class represents a render pass. It takes a camera and a scene and produces
