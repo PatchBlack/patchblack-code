@@ -131,26 +131,29 @@ const ASSET_BASE = 'https://cdn.jsdelivr.net/gh/PatchBlack/patchblack-code@main'
       scene.add(fillLight);
 
       // ===== AUDIO SETUP =====
-      const audio = new Audio(`${ASSET_BASE}/assets/audio/Boombox-audio.mp3`);
-      let isPlaying = false;
+ // ===== AUDIO SETUP (FIXED) =====
+const audio = new Audio();
+audio.crossOrigin = "anonymous";
+audio.src = `${ASSET_BASE}/assets/audio/Boombox-audio.mp3`;
+audio.preload = "auto";
 
-      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      const audioSource = audioContext.createMediaElementSource(audio);
-      const analyser = audioContext.createAnalyser();
-      analyser.fftSize = 64;
+let isPlaying = false;
 
-      const bufferLength = analyser.frequencyBinCount;
-      const dataArray = new Uint8Array(bufferLength);
+const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+const audioSource = audioContext.createMediaElementSource(audio);
+const analyser = audioContext.createAnalyser();
 
-      audioSource.connect(analyser);
-      analyser.connect(audioContext.destination);
+analyser.fftSize = 64;
 
-      audio.addEventListener('ended', () => {
-        isPlaying = false;
-        if (tapeAction) tapeAction.paused = true;
-        animateButton(playButton, 0);
-        updateCursor();
-      });
+audioSource.connect(analyser);
+analyser.connect(audioContext.destination);
+
+audio.addEventListener("ended", () => {
+  isPlaying = false;
+  if (tapeAction) tapeAction.paused = true;
+  animateButton(playButton, 0);
+  updateCursor();
+});
 
       // ===== CANVAS WAVEFORM =====
       const canvas = document.createElement('canvas');
@@ -499,11 +502,14 @@ const ASSET_BASE = 'https://cdn.jsdelivr.net/gh/PatchBlack/patchblack-code@main'
           animateButton(pauseButton, 16);
           isPlaying = false;
         } else {
-          if (audioContext.state === 'suspended') {
-            audioContext.resume();
-          }
-          
-          audio.play();
+          if (audioContext.state === "suspended") {
+  audioContext.resume();
+}
+
+audio.play().catch(err => {
+  console.warn("Audio failed to play:", err);
+});
+
           
           if (tapeAction) {
             if (!tapeAction.isRunning()) tapeAction.play();
