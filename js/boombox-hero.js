@@ -8,7 +8,7 @@
       import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 
 // Base CDN URL for assets
-const ASSET_BASE_URL = 'https://cdn.jsdelivr.net/gh/PatchBalck/patchblack-code@main';
+const ASSET_BASE = 'https://cdn.jsdelivr.net/gh/PatchBlack/patchblack-code@main';
 
       // ===== DEVICE DETECTION =====
       function isTouchDevice() {
@@ -105,7 +105,7 @@ const ASSET_BASE_URL = 'https://cdn.jsdelivr.net/gh/PatchBalck/patchblack-code@m
       // ===== HDR ENVIRONMENT =====
       const rgbeLoader = new RGBELoader();
       rgbeLoader.load(
-        `${ASSET_BASE_URL}/assets/textures/royal_esplanade_1k.hdr`,
+        `${ASSET_BASE}/assets/textures/royal_esplanade_1k.hdr`,
         (texture) => {
           texture.mapping = THREE.EquirectangularReflectionMapping;
           scene.environment = texture;
@@ -131,7 +131,7 @@ const ASSET_BASE_URL = 'https://cdn.jsdelivr.net/gh/PatchBalck/patchblack-code@m
       scene.add(fillLight);
 
       // ===== AUDIO SETUP =====
-      const audio = new Audio(`${ASSET_BASE_URL}/assets/audio/Boombox-audio.mp3`);
+      const audio = new Audio(`${ASSET_BASE}/assets/audio/Boombox-audio.mp3`);
       let isPlaying = false;
 
       const audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -359,7 +359,7 @@ const ASSET_BASE_URL = 'https://cdn.jsdelivr.net/gh/PatchBalck/patchblack-code@m
 
       const loader = new GLTFLoader();
       loader.load(
-        `${ASSET_BASE_URL}/assets/models/Boombox-01.glb`,
+        `${ASSET_BASE}/assets/models/Boombox-01.glb`,
         (gltf) => {
           boombox = gltf.scene;
 
