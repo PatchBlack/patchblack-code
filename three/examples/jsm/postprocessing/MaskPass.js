@@ -1,4 +1,4 @@
-import { Pass } from 'https://cdn.jsdelivr.net/gh/PatchBlack/patchblack-code@bf2bf55e614256e14f93de9aa6ef4b56f17e9aa7/three/examples/jsm/postprocessing/Pass.js';
+import { Pass } from './Pass.js';
 
 /**
  * This pass can be used to define a mask during post processing.
