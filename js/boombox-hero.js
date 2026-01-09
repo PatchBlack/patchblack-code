@@ -1,7 +1,7 @@
 // ===== BOOMBOX HERO SECTION - THREE.JS =====
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { HDRLoader } from 'three/addons/loaders/HDRLoader.js';
+import { HDRLoader } from 'https://cdn.jsdelivr.net/gh/PatchBlack/patchblack-code@73f47cd896c38d0c70f5ef6ae391ef81a0a61fe0/three/examples/jsm/loaders/HDRLoader.js';
 import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
