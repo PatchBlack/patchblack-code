@@ -11,8 +11,8 @@ import {
 	CustomToneMapping,
 	SRGBTransfer
 } from 'three';
-import { Pass, FullScreenQuad } from 'https://cdn.jsdelivr.net/gh/PatchBlack/patchblack-code@056fd2725802c8b26da204e140ba00b9db765a63/three/examples/jsm/postprocessing/Pass.js';
-import { OutputShader } from 'https://cdn.jsdelivr.net/gh/PatchBlack/patchblack-code@056fd2725802c8b26da204e140ba00b9db765a63/three/examples/jsm/shaders/OutputShader.js';
+import { Pass, FullScreenQuad } from './Pass.js';
+import { OutputShader } from '../shaders/OutputShader.js';
 
 /**
  * This pass is responsible for including tone mapping and color space conversion
