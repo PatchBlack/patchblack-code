@@ -8,6 +8,7 @@ import { RenderPass } from 'https://cdn.jsdelivr.net/gh/PatchBlack/patchblack-co
 import { ShaderPass } from 'https://cdn.jsdelivr.net/gh/PatchBlack/patchblack-code@f6307946789497b78ae3eb4687bc3040332b3c6d/three/examples/jsm/postprocessing/ShaderPass.js';
 import { OutputPass } from 'https://cdn.jsdelivr.net/gh/PatchBlack/patchblack-code@f6307946789497b78ae3eb4687bc3040332b3c6d/three/examples/jsm/postprocessing/OutputPass.js';
 
+
 // Check if container exists
 const container = document.getElementById('boombox-hero-container');
 if (!container) {
