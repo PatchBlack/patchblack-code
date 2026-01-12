@@ -349,7 +349,7 @@ loader.load(
     drawWaveform();
     
     // UI Init
-    ensureButtonExists();
+    setupButton();
     updateCursorText();
     console.log('Boombox loaded successfully!');
   },
@@ -393,39 +393,16 @@ function performToggle() {
 }
 
 // ===== UI STATIC SETUP =====
-function ensureButtonExists() {
-  let btn = document.getElementById('custom-cursor');
+// ===== BUTTON CLICK SETUP =====
+function setupButton() {
+  const btn = document.getElementById('custom-cursor');
   
-  if (!btn) {
-    console.log("Creating fixed UI button...");
-    btn = document.createElement('div');
-    btn.id = 'custom-cursor';
-    btn.innerHTML = '<div id="cursor-text">PLAY</div>';
-    document.body.appendChild(btn);
+  if (btn) {
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      toggleAudio();
+    };
   }
-
-  // FORCE STATIC CSS
-  // This removes the "following" logic and keeps it at the bottom of the screen
-  Object.assign(btn.style, {
-    position: 'fixed',         // Fixed relative to viewport
-    bottom: '5%',              // 5% from the bottom
-    left: '50%',               // Centered horizontally
-    transform: 'translateX(-50%)', // Center alignment
-    zIndex: '1000',            // Above the canvas
-    pointerEvents: 'auto',     // Clickable
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '10px 20px',      // Padding instead of fixed width
-    width: 'auto',             // Let it grow naturally
-    height: 'auto'             // Let it grow naturally
-  });
-  
-  btn.onclick = (e) => {
-    e.stopPropagation();
-    toggleAudio();
-  };
 }
 
 // ===== ANIMATION LOOP =====
@@ -482,5 +459,3 @@ window.addEventListener('resize', () => {
   composer.setSize(containerWidth, containerHeight);
   handleResponsiveness();
 });
-
-window.addEventListener('DOMContentLoaded', ensureButtonExists);
