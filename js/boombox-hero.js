@@ -308,6 +308,9 @@ loader.load(
     const center = box.getCenter(new THREE.Vector3());
     boombox.position.sub(center);
 
+    const boxHeight = box.max.y - box.min.y;
+    boombox.position.y = -boxHeight / 2 - 2;
+
     gltf.scene.traverse((child) => {
       if (child.name === 'play-button') {
         playButton = child;
