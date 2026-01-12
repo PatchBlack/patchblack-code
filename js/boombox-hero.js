@@ -76,11 +76,7 @@ renderer.toneMappingExposure = 1.2;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 
 // Set z-index to 1 so it sits behind the UI but handles 3D rendering
-renderer.domElement.style.zIndex = '1';
-renderer.domElement.style.position = 'absolute';
-renderer.domElement.style.top = '0';
-renderer.domElement.style.left = '0';
-document.getElementById('canvas-container').appendChild(renderer.domElement);
+container.appendChild(renderer.domElement);
 
 // ===== POST-PROCESSING =====
 const composer = new EffectComposer(renderer);
