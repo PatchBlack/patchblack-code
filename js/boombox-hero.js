@@ -51,19 +51,25 @@ const ChromaticAberrationShader = {
 };
 
 // ===== SCENE SETUP =====
+// ===== SCENE SETUP =====
 const scene = new THREE.Scene();
 scene.background = null;
 
+// ✅ ADD THIS - Get container dimensions
+const container = document.getElementById('canvas-container');
+const containerWidth = container.clientWidth;
+const containerHeight = container.clientHeight;
+
 const camera = new THREE.PerspectiveCamera(
   45,
-  window.innerWidth / window.innerHeight,
+  containerWidth / containerHeight,  // ✅ CHANGED
   0.1,
   1000
 );
 camera.position.set(0, 0, 13);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setSize(containerWidth, containerHeight);  // ✅ CHANGED
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.2;
@@ -245,18 +251,23 @@ function animateButton(button, targetRotation) {
 }
 
 // ===== MOUSE TRACKING =====
+// ===== MOUSE TRACKING =====
 const mouse = { x: 0, y: 0 };
 const targetRotation = { x: 0, y: 0 };
 const currentRotation = { x: 0, y: 0 };
 
 window.addEventListener('mousemove', (event) => {
-  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-  mouse.y = (event.clientY / window.innerHeight) * 2 - 1;
+  // ✅ ADD THIS - Get container bounds
+  const container = document.getElementById('canvas-container');
+  const rect = container.getBoundingClientRect();
+  
+  // ✅ CHANGED - Use container-relative coordinates
+  mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+  mouse.y = ((event.clientY - rect.top) / rect.height) * 2 - 1;
 
   targetRotation.y = mouse.x * THREE.MathUtils.degToRad(20);
   targetRotation.x = mouse.y * THREE.MathUtils.degToRad(10);
 });
-
 // ===== TEXT ANIMATION =====
 function updateCursorText() {
   const cursorText = document.getElementById('cursor-text');
@@ -463,10 +474,16 @@ function handleResponsiveness() {
 }
 
 window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
+  // ✅ ADD THIS - Get updated container dimensions
+  const container = document.getElementById('canvas-container');
+  const containerWidth = container.clientWidth;
+  const containerHeight = container.clientHeight;
+  
+  // ✅ CHANGED - Use container dimensions
+  camera.aspect = containerWidth / containerHeight;
   camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  composer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setSize(containerWidth, containerHeight);
+  composer.setSize(containerWidth, containerHeight);
   handleResponsiveness();
 });
 
