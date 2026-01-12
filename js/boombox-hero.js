@@ -348,6 +348,14 @@ loader.load(
     }
 
     scene.add(boombox);
+
+boombox.rotation.y = THREE.MathUtils.degToRad(20);   // Start at +20° horizontal
+    boombox.rotation.x = THREE.MathUtils.degToRad(-10);  // Start at -10° vertical
+    
+    // ✅ UPDATE CURRENT ROTATION to match
+    currentRotation.y = THREE.MathUtils.degToRad(20);
+    currentRotation.x = THREE.MathUtils.degToRad(-10);
+    
     handleResponsiveness();
     drawWaveform();
     
