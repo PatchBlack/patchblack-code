@@ -22,6 +22,13 @@ function shouldRotateBoombox() {
   return isTouch && (isPortrait || window.innerWidth <= 768);
 }
 
+function isTablet() {
+  const isTouch = isTouchDevice();
+  const width = window.innerWidth;
+  // Tablets are touch devices with width between 769px and 1024px
+  return isTouch && width >= 769 && width <= 1024;
+}
+
 // ===== CHROMATIC ABERRATION SHADER =====
 const ChromaticAberrationShader = {
   uniforms: {
@@ -66,7 +73,8 @@ const camera = new THREE.PerspectiveCamera(
   0.1,
   1000
 );
-camera.position.set(0, 0, 11);
+const cameraZ = isTablet() ? 10 : 11;  // 10 for tablets, 13 for others
+camera.position.set(0, 0, cameraZ);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 renderer.setSize(containerWidth, containerHeight);  // ✅ CHANGED
@@ -458,15 +466,18 @@ function handleResponsiveness() {
 }
 
 window.addEventListener('resize', () => {
-  // ✅ ADD THIS - Get updated container dimensions
   const container = document.getElementById('canvas-container');
   const containerWidth = container.clientWidth;
   const containerHeight = container.clientHeight;
   
-  // ✅ CHANGED - Use container dimensions
   camera.aspect = containerWidth / containerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(containerWidth, containerHeight);
   composer.setSize(containerWidth, containerHeight);
+  
+  // ✅ Update camera Z on orientation change
+  const cameraZ = isTablet() ? 10 : 13;
+  camera.position.z = cameraZ;
+  
   handleResponsiveness();
 });
