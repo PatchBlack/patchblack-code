@@ -22,6 +22,13 @@ function shouldRotateBoombox() {
   return isTouch && (isPortrait || window.innerWidth <= 768);
 }
 
+function isTablet() {
+  const isTouch = isTouchDevice();
+  const width = window.innerWidth;
+  // Tablets are touch devices with width between 769px and 1024px
+  return isTouch && width >= 769 && width <= 1180;
+}
+
 // ===== CHROMATIC ABERRATION SHADER =====
 const ChromaticAberrationShader = {
   uniforms: {
@@ -66,7 +73,8 @@ const camera = new THREE.PerspectiveCamera(
   0.1,
   1000
 );
-camera.position.set(0, 0, 11);
+const cameraZ = isTablet() ? 10 : 11;  // 10 for tablets, 13 for others
+camera.position.set(0, 0, cameraZ);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 renderer.setSize(containerWidth, containerHeight);  // ✅ CHANGED
@@ -457,16 +465,37 @@ function handleResponsiveness() {
   // Note: We removed updateButtonPosition() call here as it's no longer needed
 }
 
+// Track previous width to detect real resizes (not just address bar)
+let previousWidth = window.innerWidth;
+let resizeTimeout;
+
 window.addEventListener('resize', () => {
-  // ✅ ADD THIS - Get updated container dimensions
-  const container = document.getElementById('canvas-container');
-  const containerWidth = container.clientWidth;
-  const containerHeight = container.clientHeight;
+  // Clear previous timeout
+  clearTimeout(resizeTimeout);
   
-  // ✅ CHANGED - Use container dimensions
-  camera.aspect = containerWidth / containerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(containerWidth, containerHeight);
-  composer.setSize(containerWidth, containerHeight);
-  handleResponsiveness();
+  // Debounce - wait 150ms before actually resizing
+  resizeTimeout = setTimeout(() => {
+    const currentWidth = window.innerWidth;
+    
+    // Only resize if WIDTH changed (ignore height changes from address bar)
+    if (Math.abs(currentWidth - previousWidth) > 10) {
+      previousWidth = currentWidth;
+      
+      const container = document.getElementById('canvas-container');
+      const containerWidth = container.clientWidth;
+      const containerHeight = container.clientHeight;
+      
+      camera.aspect = containerWidth / containerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(containerWidth, containerHeight);
+      composer.setSize(containerWidth, containerHeight);
+      
+      const cameraZ = isTablet() ? 10 : 13;
+      camera.position.z = cameraZ;
+      
+      handleResponsiveness();
+      
+      console.log('Resized - Width changed significantly');
+    }
+  }, 150);
 });
