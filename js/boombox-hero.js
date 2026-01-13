@@ -26,7 +26,7 @@ function isTablet() {
   const isTouch = isTouchDevice();
   const width = window.innerWidth;
   // Tablets are touch devices with width between 769px and 1024px
-  return isTouch && width >= 769 && width <= 1180;
+  return isTouch && width >= 1024 && width <= 1180;
 }
 
 // ===== CHROMATIC ABERRATION SHADER =====
