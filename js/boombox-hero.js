@@ -9,6 +9,32 @@ import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 // Base CDN URL for assets
 const ASSET_BASE = 'https://cdn.jsdelivr.net/gh/PatchBlack/patchblack-code@main';
 
+// ===== LOADING MANAGER FOR PRELOADER INTEGRATION =====
+const loadingManager = new THREE.LoadingManager();
+
+loadingManager.onStart = function(url, itemsLoaded, itemsTotal) {
+  console.log(`🔄 Started loading: ${url}`);
+  console.log(`📦 Progress: ${itemsLoaded} of ${itemsTotal} files`);
+};
+
+loadingManager.onProgress = function(url, itemsLoaded, itemsTotal) {
+  const progress = (itemsLoaded / itemsTotal) * 100;
+  console.log(`📊 Loading: ${progress.toFixed(0)}%`);
+};
+
+loadingManager.onLoad = function() {
+  console.log('✅ All boombox assets loaded!');
+  
+  // Notify preloader that boombox is ready
+  if (window.onBoomboxLoaded && typeof window.onBoomboxLoaded === 'function') {
+    window.onBoomboxLoaded();
+  }
+};
+
+loadingManager.onError = function(url) {
+  console.error('❌ Error loading:', url);
+};
+
 // ===== DEVICE DETECTION =====
 function isTouchDevice() {
   return (('ontouchstart' in window) ||
@@ -25,7 +51,6 @@ function shouldRotateBoombox() {
 function isTablet() {
   const isTouch = isTouchDevice();
   const width = window.innerWidth;
-  // Tablets are touch devices with width between 769px and 1024px
   return isTouch && width >= 769 && width <= 1180;
 }
 
@@ -58,32 +83,29 @@ const ChromaticAberrationShader = {
 };
 
 // ===== SCENE SETUP =====
-// ===== SCENE SETUP =====
 const scene = new THREE.Scene();
 scene.background = null;
 
-// ✅ ADD THIS - Get container dimensions
 const container = document.getElementById('canvas-container');
 const containerWidth = container.clientWidth;
 const containerHeight = container.clientHeight;
 
 const camera = new THREE.PerspectiveCamera(
   45,
-  containerWidth / containerHeight,  // ✅ CHANGED
+  containerWidth / containerHeight,
   0.1,
   1000
 );
-const cameraZ = isTablet() ? 10 : 11;  // 10 for tablets, 13 for others
+const cameraZ = isTablet() ? 10 : 11;
 camera.position.set(0, 0, cameraZ);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-renderer.setSize(containerWidth, containerHeight);  // ✅ CHANGED
+renderer.setSize(containerWidth, containerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.2;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 
-// Set z-index to 1 so it sits behind the UI but handles 3D rendering
 container.appendChild(renderer.domElement);
 
 // ===== POST-PROCESSING =====
@@ -96,27 +118,31 @@ composer.addPass(chromaticPass);
 
 composer.addPass(new OutputPass());
 
-// ===== HDR ENVIRONMENT =====
-const rgbeLoader = new RGBELoader();
+// ===== HDR ENVIRONMENT (uses LoadingManager) =====
+const rgbeLoader = new RGBELoader(loadingManager);
 rgbeLoader.load(
   `${ASSET_BASE}/assets/textures/royal_esplanade_1k.hdr`,
   (texture) => {
     texture.mapping = THREE.EquirectangularReflectionMapping;
     scene.environment = texture;
+    console.log('🌅 HDR environment loaded');
   },
   undefined,
-  () => console.warn('HDR texture not found - using fallback lighting')
+  () => console.warn('⚠️ HDR texture not found - using fallback lighting')
 );
 
 // ===== LIGHTING =====
 scene.add(new THREE.AmbientLight(0xb0bbcb, 0.6));
+
 const keyLight = new THREE.DirectionalLight(0xb0bbcb, 5);
 keyLight.position.set(5, 8, 5);
 keyLight.castShadow = true;
 scene.add(keyLight);
+
 const rimLight = new THREE.DirectionalLight(0xb0bbcb, 1.5);
 rimLight.position.set(-5, 3, -5);
 scene.add(rimLight);
+
 const fillLight = new THREE.DirectionalLight(0xb0bbcb, 0.5);
 fillLight.position.set(0, -3, 5);
 scene.add(fillLight);
@@ -129,7 +155,6 @@ audio.preload = "auto";
 
 let isPlaying = false;
 
-// Initialize AudioContext
 const AudioContext = window.AudioContext || window.webkitAudioContext;
 const audioContext = new AudioContext();
 const audioSource = audioContext.createMediaElementSource(audio);
@@ -255,23 +280,21 @@ function animateButton(button, targetRotation) {
 }
 
 // ===== MOUSE TRACKING =====
-// ===== MOUSE TRACKING =====
 const mouse = { x: 0, y: 0 };
 const targetRotation = { x: 0, y: 0 };
 const currentRotation = { x: 0, y: 0 };
 
 window.addEventListener('mousemove', (event) => {
-  // ✅ ADD THIS - Get container bounds
   const container = document.getElementById('canvas-container');
   const rect = container.getBoundingClientRect();
   
-  // ✅ CHANGED - Use container-relative coordinates
   mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
   mouse.y = ((event.clientY - rect.top) / rect.height) * 2 - 1;
 
   targetRotation.y = mouse.x * THREE.MathUtils.degToRad(20);
   targetRotation.x = mouse.y * THREE.MathUtils.degToRad(10);
 });
+
 // ===== TEXT ANIMATION =====
 function updateCursorText() {
   const cursorText = document.getElementById('cursor-text');
@@ -304,10 +327,10 @@ function updateCursorText() {
   });
 }
 
-// ===== MODEL LOADER =====
+// ===== MODEL LOADER (uses LoadingManager) =====
 let boombox = null;
 
-const loader = new GLTFLoader();
+const loader = new GLTFLoader(loadingManager);
 loader.load(
   `${ASSET_BASE}/assets/models/Boombox-01.glb`,
   (gltf) => {
@@ -322,11 +345,19 @@ loader.load(
     gltf.scene.traverse((child) => {
       if (child.name === 'play-button') {
         playButton = child;
-        buttonInitialRotations.set(playButton, { x: child.rotation.x, y: child.rotation.y, z: child.rotation.z });
+        buttonInitialRotations.set(playButton, { 
+          x: child.rotation.x, 
+          y: child.rotation.y, 
+          z: child.rotation.z 
+        });
       }
       if (child.name === 'pause-button') {
         pauseButton = child;
-        buttonInitialRotations.set(pauseButton, { x: child.rotation.x, y: child.rotation.y, z: child.rotation.z });
+        buttonInitialRotations.set(pauseButton, { 
+          x: child.rotation.x, 
+          y: child.rotation.y, 
+          z: child.rotation.z 
+        });
       }
       if (child.isMesh) {
         if (child.name === 'Speakers_001' || child.name === 'Speakers_002') {
@@ -336,9 +367,11 @@ loader.load(
           originalMaterial.emissiveMap = canvasTexture;
           originalMaterial.emissiveIntensity = 1.5;
           originalMaterial.transparent = true;
+          
           canvasTexture.center.set(0.5, 0.5);
           canvasTexture.repeat.set(1.5, -1.5);
           canvasTexture.offset.set(0, -0.15);
+          
           child.material = originalMaterial;
           child.material.needsUpdate = true;
         } else if (child.material) {
@@ -357,23 +390,23 @@ loader.load(
 
     scene.add(boombox);
 
-boombox.rotation.y = THREE.MathUtils.degToRad(20);   // Start at +20° horizontal
-    boombox.rotation.x = THREE.MathUtils.degToRad(-10);  // Start at -10° vertical
+    // Set initial rotation
+    boombox.rotation.y = THREE.MathUtils.degToRad(20);
+    boombox.rotation.x = THREE.MathUtils.degToRad(-10);
     
-    // ✅ UPDATE CURRENT ROTATION to match
     currentRotation.y = THREE.MathUtils.degToRad(20);
     currentRotation.x = THREE.MathUtils.degToRad(-10);
     
     handleResponsiveness();
     drawWaveform();
     
-    // UI Init
     setupButton();
     updateCursorText();
-    console.log('Boombox loaded successfully!');
+    
+    console.log('🎵 Boombox model loaded and ready!');
   },
   undefined,
-  (error) => console.error('Error loading model:', error)
+  (error) => console.error('❌ Error loading boombox model:', error)
 );
 
 // ===== AUDIO TOGGLE LOGIC =====
@@ -411,7 +444,6 @@ function performToggle() {
   updateCursorText();
 }
 
-// ===== UI STATIC SETUP =====
 // ===== BUTTON CLICK SETUP =====
 function setupButton() {
   const btn = document.getElementById('custom-cursor');
@@ -433,7 +465,6 @@ function animate() {
   drawWaveform();
 
   if (boombox) {
-    // ONLY update model rotation, NOT button position
     currentRotation.x += (targetRotation.x - currentRotation.x) * 0.05;
     currentRotation.y += (targetRotation.y - currentRotation.y) * 0.05;
     boombox.rotation.x = currentRotation.x;
@@ -462,22 +493,22 @@ function handleResponsiveness() {
   const center = box.getCenter(new THREE.Vector3());
   boombox.position.sub(center);
   
-  // Note: We removed updateButtonPosition() call here as it's no longer needed
+  // Move down on mobile
+  if (isTouchDevice()) {
+    boombox.position.y -= 2;
+  }
 }
 
-// Track previous width to detect real resizes (not just address bar)
+// Debounced resize handler
 let previousWidth = window.innerWidth;
 let resizeTimeout;
 
 window.addEventListener('resize', () => {
-  // Clear previous timeout
   clearTimeout(resizeTimeout);
   
-  // Debounce - wait 150ms before actually resizing
   resizeTimeout = setTimeout(() => {
     const currentWidth = window.innerWidth;
     
-    // Only resize if WIDTH changed (ignore height changes from address bar)
     if (Math.abs(currentWidth - previousWidth) > 10) {
       previousWidth = currentWidth;
       
@@ -495,7 +526,9 @@ window.addEventListener('resize', () => {
       
       handleResponsiveness();
       
-      console.log('Resized - Width changed significantly');
+      console.log('🔄 Resized - Width changed significantly');
     }
   }, 150);
 });
+
+console.log('🚀 Boombox experience initialized');
