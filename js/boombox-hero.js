@@ -308,6 +308,64 @@ window.addEventListener('mousemove', (event) => {
   targetRotation.y = mouse.x * THREE.MathUtils.degToRad(20);
   targetRotation.x = mouse.y * THREE.MathUtils.degToRad(10);
 });
+
+// ===== TOUCH TRACKING FOR MOBILE =====
+let isTouching = false;
+
+window.addEventListener('touchstart', (event) => {
+  const container = document.getElementById('canvas-container');
+  if (!container) return;
+  
+  const rect = container.getBoundingClientRect();
+  const touch = event.touches[0];
+  
+  // Check if touch is within container
+  const isInsideContainer = 
+    touch.clientX >= rect.left && 
+    touch.clientX <= rect.right && 
+    touch.clientY >= rect.top && 
+    touch.clientY <= rect.bottom;
+  
+  if (isInsideContainer) {
+    isTouching = true;
+  }
+});
+
+window.addEventListener('touchmove', (event) => {
+  if (!isTouching) return;
+  
+  const container = document.getElementById('canvas-container');
+  if (!container) return;
+  
+  const rect = container.getBoundingClientRect();
+  const touch = event.touches[0];
+  
+  // Check if container is in viewport
+  const isVisible = rect.top < window.innerHeight && rect.bottom > 0;
+  if (!isVisible) return;
+  
+  // Calculate normalized position (-1 to 1)
+  mouse.x = ((touch.clientX - rect.left) / rect.width) * 2 - 1;
+  mouse.y = ((touch.clientY - rect.top) / rect.height) * 2 - 1;
+  
+  // Clamp values
+  mouse.x = Math.max(-1, Math.min(1, mouse.x));
+  mouse.y = Math.max(-1, Math.min(1, mouse.y));
+
+  targetRotation.y = mouse.x * THREE.MathUtils.degToRad(20);
+  targetRotation.x = mouse.y * THREE.MathUtils.degToRad(10);
+  
+  // Prevent scrolling while rotating the model
+  event.preventDefault();
+}, { passive: false }); // Need passive: false to allow preventDefault
+
+window.addEventListener('touchend', () => {
+  isTouching = false;
+});
+
+window.addEventListener('touchcancel', () => {
+  isTouching = false;
+});
 // ===== TEXT ANIMATION =====
 function updateCursorText() {
   const cursorText = document.getElementById('cursor-text');
