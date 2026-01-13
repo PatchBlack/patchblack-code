@@ -492,11 +492,7 @@ function handleResponsiveness() {
   const box = new THREE.Box3().setFromObject(boombox);
   const center = box.getCenter(new THREE.Vector3());
   boombox.position.sub(center);
-  
-  // Move down on mobile
-  if (isTouchDevice()) {
-    boombox.position.y -= 2;
-  }
+
 }
 
 // Debounced resize handler
