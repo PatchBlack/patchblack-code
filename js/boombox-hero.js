@@ -311,15 +311,23 @@ window.addEventListener('mousemove', (event) => {
 
 // ===== TOUCH TRACKING FOR MOBILE =====
 let isTouching = false;
+let lastTouchX = 0;
+let lastTouchY = 0;
 
 window.addEventListener('touchstart', (event) => {
   const container = document.getElementById('canvas-container');
   if (!container) return;
   
+  // Don't interfere with button clicks
+  const button = document.getElementById('custom-cursor');
+  if (button && event.target.closest('#custom-cursor')) {
+    return;
+  }
+  
   const rect = container.getBoundingClientRect();
   const touch = event.touches[0];
   
-  // Check if touch is within container
+  // Check if touch is within canvas area
   const isInsideContainer = 
     touch.clientX >= rect.left && 
     touch.clientX <= rect.right && 
@@ -328,8 +336,16 @@ window.addEventListener('touchstart', (event) => {
   
   if (isInsideContainer) {
     isTouching = true;
+    lastTouchX = touch.clientX;
+    lastTouchY = touch.clientY;
+    
+    // Calculate initial position
+    mouse.x = ((touch.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = ((touch.clientY - rect.top) / rect.height) * 2 - 1;
+    mouse.x = Math.max(-1, Math.min(1, mouse.x));
+    mouse.y = Math.max(-1, Math.min(1, mouse.y));
   }
-});
+}, { passive: true });
 
 window.addEventListener('touchmove', (event) => {
   if (!isTouching) return;
@@ -339,10 +355,6 @@ window.addEventListener('touchmove', (event) => {
   
   const rect = container.getBoundingClientRect();
   const touch = event.touches[0];
-  
-  // Check if container is in viewport
-  const isVisible = rect.top < window.innerHeight && rect.bottom > 0;
-  if (!isVisible) return;
   
   // Calculate normalized position (-1 to 1)
   mouse.x = ((touch.clientX - rect.left) / rect.width) * 2 - 1;
@@ -355,9 +367,21 @@ window.addEventListener('touchmove', (event) => {
   targetRotation.y = mouse.x * THREE.MathUtils.degToRad(20);
   targetRotation.x = mouse.y * THREE.MathUtils.degToRad(10);
   
-  // Prevent scrolling while rotating the model
-  event.preventDefault();
-}, { passive: false }); // Need passive: false to allow preventDefault
+  lastTouchX = touch.clientX;
+  lastTouchY = touch.clientY;
+  
+  // Only prevent default if we're actually rotating
+  // This allows scrolling when not touching the boombox area
+  const isStillInContainer = 
+    touch.clientX >= rect.left && 
+    touch.clientX <= rect.right && 
+    touch.clientY >= rect.top && 
+    touch.clientY <= rect.bottom;
+    
+  if (isStillInContainer) {
+    event.preventDefault();
+  }
+}, { passive: false });
 
 window.addEventListener('touchend', () => {
   isTouching = false;
@@ -371,7 +395,7 @@ function updateCursorText() {
   const cursorText = document.getElementById('cursor-text');
   if (!cursorText) return;
   
-  const newText = isPlaying ? 'PAUSE' : 'PLAY';
+  const newText = isPlaying ? 'PAUSE MESSAGE' : 'PLAY MESSAGE';
   
   if (cursorText.textContent.trim() === newText) return;
 
