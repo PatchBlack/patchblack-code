@@ -26,7 +26,7 @@ function isTablet() {
   const isTouch = isTouchDevice();
   const width = window.innerWidth;
   // Tablets are touch devices with width between 769px and 1024px
-  return isTouch && width >= 769 && width <= 1024;
+  return isTouch && width >= 769 && width <= 1180;
 }
 
 // ===== CHROMATIC ABERRATION SHADER =====
@@ -73,7 +73,7 @@ const camera = new THREE.PerspectiveCamera(
   0.1,
   1000
 );
-const cameraZ = isTablet() ? 8 : 11;  // 10 for tablets, 13 for others
+const cameraZ = isTablet() ? 10 : 11;  // 10 for tablets, 13 for others
 camera.position.set(0, 0, cameraZ);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
