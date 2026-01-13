@@ -286,15 +286,28 @@ const currentRotation = { x: 0, y: 0 };
 
 window.addEventListener('mousemove', (event) => {
   const container = document.getElementById('canvas-container');
+  if (!container) return;
+  
   const rect = container.getBoundingClientRect();
+  
+  // ✅ Only track if container is in viewport
+  const isVisible = rect.top < window.innerHeight && rect.bottom > 0;
+  
+  if (!isVisible) {
+    // Container is off-screen, don't update rotation
+    return;
+  }
   
   mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
   mouse.y = ((event.clientY - rect.top) / rect.height) * 2 - 1;
+  
+  // ✅ Clamp values to prevent extreme rotation
+  mouse.x = Math.max(-1, Math.min(1, mouse.x));
+  mouse.y = Math.max(-1, Math.min(1, mouse.y));
 
   targetRotation.y = mouse.x * THREE.MathUtils.degToRad(20);
   targetRotation.x = mouse.y * THREE.MathUtils.degToRad(10);
 });
-
 // ===== TEXT ANIMATION =====
 function updateCursorText() {
   const cursorText = document.getElementById('cursor-text');
