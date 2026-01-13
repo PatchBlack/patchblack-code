@@ -403,6 +403,16 @@ function updateCursorText() {
   const letters = newText.split('');
 
   letters.forEach((letter, index) => {
+    // ✅ Handle spaces differently
+    if (letter === ' ') {
+      const space = document.createElement('span');
+      space.innerHTML = '&nbsp;'; // Non-breaking space
+      space.style.display = 'inline-block';
+      space.style.width = '0.5em'; // Adjust space width
+      cursorText.appendChild(space);
+      return;
+    }
+    
     const wrapper = document.createElement('span');
     wrapper.className = 'letter-wrapper';
 
