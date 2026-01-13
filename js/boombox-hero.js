@@ -370,18 +370,8 @@ window.addEventListener('touchmove', (event) => {
   lastTouchX = touch.clientX;
   lastTouchY = touch.clientY;
   
-  // Only prevent default if we're actually rotating
-  // This allows scrolling when not touching the boombox area
-  const isStillInContainer = 
-    touch.clientX >= rect.left && 
-    touch.clientX <= rect.right && 
-    touch.clientY >= rect.top && 
-    touch.clientY <= rect.bottom;
-    
-  if (isStillInContainer) {
-    event.preventDefault();
-  }
-}, { passive: false });
+  // ✅ No preventDefault - allow scrolling!
+}, { passive: true });  // ✅ passive: true for better performance
 
 window.addEventListener('touchend', () => {
   isTouching = false;
