@@ -105,6 +105,7 @@ const awayColor = { r: 1.0, g: 0.831, b: 0.255 };
 const gamma = 2.2;
 
 const venetianMaterials = [];
+let particleColors = null;
 
 // ==========================================
 // TEXT TRANSITIONS
@@ -670,6 +671,12 @@ function updateParticles(deltaTime) {
   prevMouseCoord.copy(mouseCoord);
   const t = elapsedTime;
 
+  const freq = params.turbulenceFreq;
+  const turbStr = params.turbulenceStrength * deltaTime;
+  const freq2 = params.wave2Freq;
+  const wave2Str = params.wave2Strength * deltaTime;
+
+
   for (let i = 0; i < count; i++) {
     const idx = i * 3;
     const px = particlePositions[idx];
@@ -697,10 +704,9 @@ function updateParticles(deltaTime) {
    const distToTargetSq = dx * dx + dy * dy + dz * dz;
 const isAway = !isMorphing && distToTargetSq > (params.distanceThreshold * params.distanceThreshold);
 
-    const freq = params.turbulenceFreq;
-    vx += Math.sin(py * freq + t) * Math.cos(pz * freq + t * 1.3) * params.turbulenceStrength * deltaTime;
-    vy += Math.sin(pz * freq + t * 1.1) * Math.cos(px * freq + t * 0.9) * params.turbulenceStrength * deltaTime;
-    vz += Math.sin(px * freq + t * 0.8) * Math.cos(py * freq + t * 1.2) * params.turbulenceStrength * deltaTime;
+    vx += Math.sin(py * freq + t) * Math.cos(pz * freq + t * 1.3) * turbStr;
+    vy += Math.sin(pz * freq + t * 1.1) * Math.cos(px * freq + t * 0.9) * turbStr;
+    vz += Math.sin(px * freq + t * 0.8) * Math.cos(py * freq + t * 1.2) * turbStr;
 
     if (isWave2Active) {
       let wave2Multiplier = 1.0;
@@ -711,11 +717,10 @@ const isAway = !isMorphing && distToTargetSq > (params.distanceThreshold * param
         wave2Multiplier = Math.max(0, 1.0 - fadeProgress);
       }
       
-      const freq2 = params.wave2Freq;
-      const strength = params.wave2Strength * wave2Multiplier;
-      vx += Math.sin(py * freq2 + t) * Math.cos(pz * freq2 + t * 1.3) * strength * deltaTime;
-      vy += Math.sin(pz * freq2 + t * 1.1) * Math.cos(px * freq2 + t * 0.9) * strength * deltaTime;
-      vz += Math.sin(px * freq2 + t * 0.8) * Math.cos(py * freq2 + t * 1.2) * strength * deltaTime;
+      const strength = wave2Str * wave2Multiplier;
+      vx += Math.sin(py * freq2 + t) * Math.cos(pz * freq2 + t * 1.3) * strength;
+      vy += Math.sin(pz * freq2 + t * 1.1) * Math.cos(px * freq2 + t * 0.9) * strength;
+      vz += Math.sin(px * freq2 + t * 0.8) * Math.cos(py * freq2 + t * 1.2) * strength;
     }
 
     if (pz >= params.mouseDepthMin && pz <= params.mouseDepthMax) {
@@ -805,13 +810,21 @@ const isAway = !isMorphing && distToTargetSq > (params.distanceThreshold * param
     dummy.updateMatrix();
     particleMesh.setMatrixAt(i, dummy.matrix);
 
-    const color = isMorphing ? inPlaceColor : (isAway ? awayColor : inPlaceColor);
-    tempColor.setRGB(
-      Math.pow(color.r, gamma),
-      Math.pow(color.g, gamma),
-      Math.pow(color.b, gamma)
-    );
-    particleMesh.setColorAt(i, tempColor);
+   const color = isMorphing ? inPlaceColor : (isAway ? awayColor : inPlaceColor);
+    
+    // Only update if color actually changed
+    if (!particleColors || particleColors[i] !== color) {
+      tempColor.setRGB(
+        Math.pow(color.r, gamma),
+        Math.pow(color.g, gamma),
+        Math.pow(color.b, gamma)
+      );
+      particleMesh.setColorAt(i, tempColor);
+      
+      // Track this color
+      if (!particleColors) particleColors = new Array(count);
+      particleColors[i] = color;
+    }
   }
 
   particleMesh.instanceMatrix.needsUpdate = true;
