@@ -172,20 +172,6 @@ function setupNavButtons() {
     });
   }
 
-  function setupCTAButton() {
-  const ctaButton = document.querySelector('.cursor-button-main');
-  
-  if (ctaButton) {
-    ctaButton.addEventListener('click', () => {
-      const key = SHAPE_KEYS[currentShapeIndex];
-      const url = CONTENT[key].url;
-      
-      if (url) {
-        window.location.href = url;
-      }
-    });
-  }
-}
   
   if (nextBtn) {
     nextBtn.addEventListener('click', () => {
@@ -200,6 +186,21 @@ function setupNavButtons() {
   }
 }
 
+
+  function setupCTAButton() {
+  const ctaButton = document.querySelector('.cursor-button-main');
+  
+  if (ctaButton) {
+    ctaButton.addEventListener('click', () => {
+      const key = SHAPE_KEYS[currentShapeIndex];
+      const url = CONTENT[key].url;
+      
+      if (url) {
+        window.location.href = url;
+      }
+    });
+  }
+}
 // ==========================================
 // LOADING
 // ==========================================
