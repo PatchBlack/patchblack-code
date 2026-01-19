@@ -892,7 +892,7 @@ async function init() {
   setupParticles();
   setupMouse();
   setupNavButtons();
-  TextTransitions();
+  initTextTransitions();
 
   window.addEventListener("resize", () => {
     camera.aspect = window.innerWidth / window.innerHeight;
@@ -902,6 +902,8 @@ async function init() {
 
   renderer.setAnimationLoop(render);
   console.log('✅ Init complete!');
+
+  setupIntersectionObserver();
 }
 
 // ==========================================
