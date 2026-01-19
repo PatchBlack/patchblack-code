@@ -623,3 +623,5 @@ window.addEventListener('resize', () => {
 });
 
 console.log('🚀 Boombox experience initialized');
+
+setupIntersectionObserver();
