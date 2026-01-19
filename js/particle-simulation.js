@@ -924,5 +924,27 @@ function render() {
   renderer.render(scene, camera);
 }
 
+function setupIntersectionObserver() {
+  const container = document.getElementById('particle-sim-wrapper');
+  
+  if (!container) return;
+  
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        console.log('✅ Particle sim visible - resuming');
+        renderer.setAnimationLoop(render);
+      } else {
+        console.log('⏸️ Particle sim hidden - pausing');
+        renderer.setAnimationLoop(null);
+      }
+    });
+  }, {
+    threshold: 0.1
+  });
+  
+  observer.observe(container);
+}
+
 // Start
 init();
