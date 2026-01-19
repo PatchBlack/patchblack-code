@@ -5,6 +5,8 @@ import { HDRLoader } from 'three/addons/loaders/HDRLoader.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js';
 
+const ASSET_BASE = 'https://cdn.jsdelivr.net/gh/PatchBlack/patchblack-code@main';
+
 // ==========================================
 // TEXT CONTENT
 // ==========================================
@@ -185,9 +187,9 @@ function setupNavButtons() {
 async function loadParticlePositions() {
   console.log('Loading particle positions...');
   const [cubeData, coneData, monkeyData] = await Promise.all([
-    fetch("/assets/particles/monitor-particle.json").then((r) => r.json()),
-    fetch("/assets/particles/phone-particle.json").then((r) => r.json()),
-    fetch("/assets/particles/vr-particle.json").then((r) => r.json()),
+    fetch(`${ASSET_BASE}/assets/particles/monitor-particle.json`).then((r) => r.json()),
+    fetch(`${ASSET_BASE}/assets/particles/phone-particle.json`).then((r) => r.json()),
+    fetch(`${ASSET_BASE}/assets/particles/vr-particle.json`).then((r) => r.json()),
   ]);
 
   cubePositions = cubeData;
@@ -205,9 +207,9 @@ async function loadModels() {
   envMap.mapping = THREE.EquirectangularReflectionMapping;
 
   const [monitorGltf, mobileGltf, vrGltf] = await Promise.all([
-    modelLoader.loadAsync("/assets/models/monitor.glb"),
-    modelLoader.loadAsync("/assets/models/mobile.glb"),
-    modelLoader.loadAsync("/assets/models/vr-glass.glb"),
+    modelLoader.loadAsync(`${ASSET_BASE}/assets/models/monitor.glb`),
+    modelLoader.loadAsync(`${ASSET_BASE}/assets/models/mobile.glb`),
+    modelLoader.loadAsync(`${ASSET_BASE}/assets/models/vr-glass.glb`),
   ]);
 
   const monitorContainer = new THREE.Group();
