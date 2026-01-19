@@ -859,10 +859,10 @@ async function init() {
   renderer.outputEncoding = THREE.sRGBEncoding;
 
   camera = new THREE.PerspectiveCamera(10, window.innerWidth / window.innerHeight, 0.01, 1000);
-  if (window.innerWidth < 480) camera.position.set(0.5, 0.5, -10);
-  else if (window.innerWidth < 768) camera.position.set(0.5, 0.5, -9);
-  else if (window.innerWidth < 1024) camera.position.set(0.5, 0.5, -8);
-  else camera.position.set(0.5, 0.5, -7);
+  if (window.innerWidth < 480) camera.position.set(0.5, 0.5, -9);
+  else if (window.innerWidth < 768) camera.position.set(0.5, 0.5, -8);
+  else if (window.innerWidth < 1024) camera.position.set(0.5, 0.5, -7);
+  else camera.position.set(0.5, 0.5, -6);
   camera.rotation.set(0, Math.PI, 0);
   camera.layers.enable(0);
   camera.layers.enable(1);
