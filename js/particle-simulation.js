@@ -508,9 +508,13 @@ function setupMouse() {
   const plane = new THREE.Plane(new THREE.Vector3(0, 0, -1), 0);
 
   renderer.domElement.addEventListener('pointermove', (e) => {
+    // Get canvas bounding rect to account for padding/offset
+    const rect = renderer.domElement.getBoundingClientRect();
+    
+    // Calculate mouse position relative to canvas bounds
     const pointer = new THREE.Vector2(
-      (e.clientX / window.innerWidth) * 2 - 1,
-      -(e.clientY / window.innerHeight) * 2 + 1
+      ((e.clientX - rect.left) / rect.width) * 2 - 1,
+      -((e.clientY - rect.top) / rect.height) * 2 + 1
     );
 
     raycaster.setFromCamera(pointer, camera);
@@ -534,20 +538,19 @@ function setupMouse() {
   });
 
   renderer.domElement.addEventListener('click', (e) => {
-  // Check if click target is the canvas itself
-  if (e.target !== renderer.domElement) {
-    console.log('🚫 Click blocked - not on canvas');
-    return; // Don't trigger morph if clicking UI elements
-  }
-  
-  console.log('✅ Canvas clicked - triggering morph');
-  if (morphProgress >= 1.0 && !isWave2Active && !morphQueued) {
-    manualMorphDirection = 1;
-    morphQueued = true;
-    isWave2Active = true;
-    wave2Timer = -wave2PreDelay;
-  }
-});
+    if (e.target !== renderer.domElement) {
+      console.log('🚫 Click blocked - not on canvas');
+      return;
+    }
+    
+    console.log('✅ Canvas clicked - triggering morph');
+    if (morphProgress >= 1.0 && !isWave2Active && !morphQueued) {
+      manualMorphDirection = 1;
+      morphQueued = true;
+      isWave2Active = true;
+      wave2Timer = -wave2PreDelay;
+    }
+  });
 }
 
 // ==========================================
