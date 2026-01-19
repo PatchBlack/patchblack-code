@@ -185,9 +185,9 @@ function setupNavButtons() {
 async function loadParticlePositions() {
   console.log('Loading particle positions...');
   const [cubeData, coneData, monkeyData] = await Promise.all([
-    fetch("/examples/particles/monitor-particle.json").then((r) => r.json()),
-    fetch("/examples/particles/phone-particle.json").then((r) => r.json()),
-    fetch("/examples/particles/vr-particle.json").then((r) => r.json()),
+    fetch("/assets/particles/monitor-particle.json").then((r) => r.json()),
+    fetch("/assets/particles/phone-particle.json").then((r) => r.json()),
+    fetch("/assets/particles/vr-particle.json").then((r) => r.json()),
   ]);
 
   cubePositions = cubeData;
@@ -205,9 +205,9 @@ async function loadModels() {
   envMap.mapping = THREE.EquirectangularReflectionMapping;
 
   const [monitorGltf, mobileGltf, vrGltf] = await Promise.all([
-    modelLoader.loadAsync("/examples/models/monitor.glb"),
-    modelLoader.loadAsync("/examples/models/mobile.glb"),
-    modelLoader.loadAsync("/examples/models/vr-glass.glb"),
+    modelLoader.loadAsync("/assets/models/monitor.glb"),
+    modelLoader.loadAsync("/assets/models/mobile.glb"),
+    modelLoader.loadAsync("/assets/models/vr-glass.glb"),
   ]);
 
   const monitorContainer = new THREE.Group();
