@@ -902,8 +902,6 @@ async function init() {
 
   renderer.setAnimationLoop(render);
   console.log('✅ Init complete!');
-
-  setupIntersectionObserver();
 }
 
 // ==========================================
