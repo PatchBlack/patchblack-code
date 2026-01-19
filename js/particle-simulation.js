@@ -13,19 +13,19 @@ const ASSET_BASE = 'https://cdn.jsdelivr.net/gh/PatchBlack/patchblack-code@main'
 
 const CONTENT = {
   monitor: {
-    heading: "Product<br>Stories",
+    heading: "Product Stories",
     description: "Interactive narratives that turn complex content into clear, engaging digital products.",
     subtext: "Reports · Case studies · Platforms",
     url: "/temp-demo"
   },
   phone: {
-    heading: "Living<br>Interfaces",
+    heading: "Living Interfaces",
     description: "Interactions designed to respond, adapt, and guide users through story-led experiences.",
     subtext: "Apps · Web apps · Interactive systems",
     url: "/temp-demo"
   },
   vr: {
-    heading: "Immersive<br>Narratives",
+    heading: "Immersive Narratives",
     description: "Stories extended into spatial and immersive environments that invite exploration.",
     subtext: "AR · VR · Spatial experiences",
     url: "/temp-demo"
@@ -187,18 +187,32 @@ function setupNavButtons() {
 }
 
 
-  function setupCTAButton() {
+ function setupCTAButton() {
+  console.log('🔍 Setting up CTA button...');
+  
   const ctaButton = document.querySelector('.cursor-button-main');
+  console.log('🔍 CTA button found:', ctaButton);
   
   if (ctaButton) {
-    ctaButton.addEventListener('click', () => {
+    ctaButton.addEventListener('click', (e) => {
+      console.log('🖱️ CTA button clicked!');
+      
       const key = SHAPE_KEYS[currentShapeIndex];
+      console.log('🔍 Current shape:', key);
+      
       const url = CONTENT[key].url;
+      console.log('🔍 URL to navigate:', url);
       
       if (url) {
+        console.log('✅ Navigating to:', url);
         window.location.href = url;
+      } else {
+        console.error('❌ No URL found!');
       }
     });
+    console.log('✅ CTA button listener attached');
+  } else {
+    console.error('❌ CTA button not found in DOM!');
   }
 }
 // ==========================================
