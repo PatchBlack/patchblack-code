@@ -538,14 +538,21 @@ function setupMouse() {
     mouseRayDirection.copy(dir);
   });
 
-  renderer.domElement.addEventListener('click', () => {
-    if (morphProgress >= 1.0 && !isWave2Active && !morphQueued) {
-      manualMorphDirection = 1;
-      morphQueued = true;
-      isWave2Active = true;
-      wave2Timer = -wave2PreDelay;
-    }
-  });
+  renderer.domElement.addEventListener('click', (e) => {
+  // Check if click target is the canvas itself
+  if (e.target !== renderer.domElement) {
+    console.log('🚫 Click blocked - not on canvas');
+    return; // Don't trigger morph if clicking UI elements
+  }
+  
+  console.log('✅ Canvas clicked - triggering morph');
+  if (morphProgress >= 1.0 && !isWave2Active && !morphQueued) {
+    manualMorphDirection = 1;
+    morphQueued = true;
+    isWave2Active = true;
+    wave2Timer = -wave2PreDelay;
+  }
+});
 }
 
 // ==========================================
