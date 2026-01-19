@@ -121,8 +121,10 @@ function updateTextContent(shapeIndex) {
   subtext.style.opacity = '0';
   
   setTimeout(() => {
-    // Update content
-    heading.textContent = content.heading;
+    // Update content - FORCE 2 LINES for heading
+    const headingLines = content.heading.split(' ');
+    heading.innerHTML = headingLines.join('<br>');  // Changed from textContent
+    
     description.textContent = content.description;
     subtext.textContent = content.subtext;
     
@@ -130,7 +132,7 @@ function updateTextContent(shapeIndex) {
     heading.style.opacity = '1';
     description.style.opacity = '1';
     subtext.style.opacity = '1';
-  }, 300); // Half of transition duration
+  }, 300);
 }
 
 function initTextTransitions() {
