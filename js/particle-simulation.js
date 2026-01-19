@@ -694,8 +694,8 @@ function updateParticles(deltaTime) {
     const dx = tx - px;
     const dy = ty - py;
     const dz = tz - pz;
-    const distToTarget = Math.sqrt(dx * dx + dy * dy + dz * dz);
-    const isAway = !isMorphing && distToTarget > params.distanceThreshold;
+   const distToTargetSq = dx * dx + dy * dy + dz * dz;
+const isAway = !isMorphing && distToTargetSq > (params.distanceThreshold * params.distanceThreshold);
 
     const freq = params.turbulenceFreq;
     vx += Math.sin(py * freq + t) * Math.cos(pz * freq + t * 1.3) * params.turbulenceStrength * deltaTime;
@@ -865,7 +865,7 @@ async function init() {
   light.target.position.set(0.5, 0.5, 0.5);
   scene.add(light.target);
   light.castShadow = true;
-  light.shadow.mapSize.set(4096, 4096);
+  light.shadow.mapSize.set(2048, 2048);
   light.shadow.camera.near = 0.1;
   light.shadow.camera.far = 30;
   light.shadow.camera.left = -3;
