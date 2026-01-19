@@ -15,19 +15,19 @@ const CONTENT = {
   monitor: {
     heading: "Product<br>Stories",
     description: "Interactive narratives that turn complex content into clear, engaging digital products.",
-    subtext: "Reports · Case studies · Platforms"
+    subtext: "Reports · Case studies · Platforms",
     url: "/temp-demo"
   },
   phone: {
     heading: "Living<br>Interfaces",
     description: "Interactions designed to respond, adapt, and guide users through story-led experiences.",
-    subtext: "Apps · Web apps · Interactive systems"
+    subtext: "Apps · Web apps · Interactive systems",
     url: "/temp-demo"
   },
   vr: {
     heading: "Immersive<br>Narratives",
     description: "Stories extended into spatial and immersive environments that invite exploration.",
-    subtext: "AR · VR · Spatial experiences"
+    subtext: "AR · VR · Spatial experiences",
     url: "/temp-demo"
   }
 };
