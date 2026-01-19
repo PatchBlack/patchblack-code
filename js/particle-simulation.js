@@ -13,17 +13,17 @@ const ASSET_BASE = 'https://cdn.jsdelivr.net/gh/PatchBlack/patchblack-code@main'
 
 const CONTENT = {
   monitor: {
-    heading: "Product Stories",
+    heading: "Product<br>Stories",
     description: "Interactive narratives that turn complex content into clear, engaging digital products.",
     subtext: "Reports · Case studies · Platforms"
   },
   phone: {
-    heading: "Living Interfaces",
+    heading: "Living<br>Interfaces",
     description: "Interactions designed to respond, adapt, and guide users through story-led experiences.",
     subtext: "Apps · Web apps · Interactive systems"
   },
   vr: {
-    heading: "Immersive Narratives",
+    heading: "Immersive<br>Narratives",
     description: "Stories extended into spatial and immersive environments that invite exploration.",
     subtext: "AR · VR · Spatial experiences"
   }
