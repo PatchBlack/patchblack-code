@@ -16,16 +16,19 @@ const CONTENT = {
     heading: "Product<br>Stories",
     description: "Interactive narratives that turn complex content into clear, engaging digital products.",
     subtext: "Reports · Case studies · Platforms"
+    url: "/temp-demo"
   },
   phone: {
     heading: "Living<br>Interfaces",
     description: "Interactions designed to respond, adapt, and guide users through story-led experiences.",
     subtext: "Apps · Web apps · Interactive systems"
+    url: "/temp-demo"
   },
   vr: {
     heading: "Immersive<br>Narratives",
     description: "Stories extended into spatial and immersive environments that invite exploration.",
     subtext: "AR · VR · Spatial experiences"
+    url: "/temp-demo"
   }
 };
 
@@ -168,6 +171,21 @@ function setupNavButtons() {
       }
     });
   }
+
+  function setupCTAButton() {
+  const ctaButton = document.querySelector('.cursor-button-main');
+  
+  if (ctaButton) {
+    ctaButton.addEventListener('click', () => {
+      const key = SHAPE_KEYS[currentShapeIndex];
+      const url = CONTENT[key].url;
+      
+      if (url) {
+        window.location.href = url;
+      }
+    });
+  }
+}
   
   if (nextBtn) {
     nextBtn.addEventListener('click', () => {
@@ -894,7 +912,9 @@ async function init() {
   setupParticles();
   setupMouse();
   setupNavButtons();
+  setupCTAButton();
   initTextTransitions();
+  
 
   window.addEventListener("resize", () => {
     camera.aspect = window.innerWidth / window.innerHeight;
