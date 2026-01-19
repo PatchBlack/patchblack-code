@@ -622,6 +622,30 @@ window.addEventListener('resize', () => {
   }, 150);
 });
 
+// ===== INTERSECTION OBSERVER FOR PERFORMANCE =====
+function setupIntersectionObserver() {
+  const container = document.getElementById('canvas-container');
+  if (!container) return;
+
+  let isVisible = true;
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      isVisible = entry.isIntersecting;
+      
+      if (isVisible) {
+        console.log('👁️ Boombox visible - animation running');
+      } else {
+        console.log('🙈 Boombox off-screen - could pause here');
+      }
+    });
+  }, {
+    threshold: 0.1 // Trigger when 10% visible
+  });
+
+  observer.observe(container);
+}
+
 console.log('🚀 Boombox experience initialized');
 
 setupIntersectionObserver();
