@@ -90,7 +90,7 @@ const params = {
   wave2Freq: 15,
   distanceThreshold: 0.2,
   modelScale: 0.55,
-  mouseIntensity: 10.0,
+  mouseIntensity: 20.0,
   mouseRange: 4.0,
   mouseFalloff: 3,
   mouseDepthMin: 0.0,
