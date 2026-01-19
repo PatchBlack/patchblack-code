@@ -190,29 +190,24 @@ function setupNavButtons() {
  function setupCTAButton() {
   console.log('🔍 Setting up CTA button...');
   
-  const ctaButton = document.querySelector('.cursor-button-main');
-  console.log('🔍 CTA button found:', ctaButton);
+  const ctaWrapper = document.getElementById('cta-wrapper');  // Changed from .cursor-button-main
+  console.log('🔍 CTA wrapper found:', ctaWrapper);
   
-  if (ctaButton) {
-    ctaButton.addEventListener('click', (e) => {
-      console.log('🖱️ CTA button clicked!');
+  if (ctaWrapper) {
+    ctaWrapper.addEventListener('click', (e) => {
+      console.log('🖱️ CTA wrapper clicked!');
+      console.log('🔍 Click target:', e.target);
+      console.log('🔍 Current target:', e.currentTarget);
       
       const key = SHAPE_KEYS[currentShapeIndex];
-      console.log('🔍 Current shape:', key);
-      
       const url = CONTENT[key].url;
-      console.log('🔍 URL to navigate:', url);
       
       if (url) {
         console.log('✅ Navigating to:', url);
         window.location.href = url;
-      } else {
-        console.error('❌ No URL found!');
       }
-    });
-    console.log('✅ CTA button listener attached');
-  } else {
-    console.error('❌ CTA button not found in DOM!');
+    }, true);  // Added 'true' for capture phase
+    console.log('✅ CTA wrapper listener attached');
   }
 }
 // ==========================================
