@@ -203,7 +203,7 @@ async function loadModels() {
   console.log('Loading 3D models...');
 
   const hdrLoader = new HDRLoader();
-  const envMap = await hdrLoader.loadAsync('/examples/textures/equirectangular/royal_esplanade_1k.hdr');
+  const envMap = await hdrLoader.loadAsync(`${ASSET_BASE}/assets/textures/royal_esplanade_1k.hdr`);
   envMap.mapping = THREE.EquirectangularReflectionMapping;
 
   const [monitorGltf, mobileGltf, vrGltf] = await Promise.all([
