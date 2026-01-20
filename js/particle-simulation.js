@@ -301,11 +301,11 @@ async function loadModels() {
   const envMap = await hdrLoader.loadAsync(`${ASSET_BASE}/assets/textures/royal_esplanade_1k.hdr`);
   envMap.mapping = THREE.EquirectangularReflectionMapping;
 
-  const [monitorGltf, mobileGltf, vrGltf] = await Promise.all([
-    modelLoader.loadAsync(`${ASSET_BASE}/assets/models/monitor.glb`),
-    modelLoader.loadAsync(`${ASSET_BASE}/assets/models/mobile.glb`),
-    modelLoader.loadAsync(`${ASSET_BASE}/assets/models/vr-glass.glb`),
-  ]);
+const [monitorGltf, mobileGltf, vrGltf] = await Promise.all([
+  modelLoader.loadAsync(`${ASSET_BASE}/assets/models/monitor.glb?v=2`),
+  modelLoader.loadAsync(`${ASSET_BASE}/assets/models/mobile.glb?v=2`),
+  modelLoader.loadAsync(`${ASSET_BASE}/assets/models/vr-glass.glb?v=2`),
+]);
 
   const monitorContainer = new THREE.Group();
   const mobileContainer = new THREE.Group();
