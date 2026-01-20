@@ -473,7 +473,7 @@ loader.load(
           originalMaterial.map = videoTexture;
           originalMaterial.emissive = new THREE.Color(0x444444);
           originalMaterial.emissiveMap = videoTexture;
-          originalMaterial.emissiveIntensity = 0.8;
+          originalMaterial.emissiveIntensity = 2.0;
           originalMaterial.transparent = true;
           
           videoTexture.center.set(0.5, 0.5);
