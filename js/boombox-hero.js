@@ -177,6 +177,10 @@ const canvasTexture = new THREE.CanvasTexture(canvas);
 canvasTexture.minFilter = THREE.LinearFilter;
 canvasTexture.magFilter = THREE.LinearFilter;
 
+canvasTexture.center.set(0.5, 0.5);
+canvasTexture.repeat.set(1.5, 1.5);  // Change these for bars
+canvasTexture.offset.set(0, -0.15);
+
 // ===== VIDEO SETUP =====
 const video = document.createElement('video');
 video.src = `${ASSET_BASE}/assets/video/boombox-idle.mp4`;
@@ -188,6 +192,10 @@ video.crossOrigin = "anonymous";
 const videoTexture = new THREE.VideoTexture(video);
 videoTexture.minFilter = THREE.LinearFilter;
 videoTexture.magFilter = THREE.LinearFilter;
+
+videoTexture.center.set(0.5, 0.5);
+videoTexture.repeat.set(2.5, 2.5);  // Change these for video
+videoTexture.offset.set(0, -0.15);
 
 // Start video playing
 video.play().catch(err => console.log('Video autoplay blocked:', err));
@@ -475,10 +483,6 @@ loader.load(
           originalMaterial.emissiveMap = videoTexture;
           originalMaterial.emissiveIntensity = 8.0;
           originalMaterial.transparent = true;
-          
-          videoTexture.center.set(0.5, 0.5);
-          videoTexture.repeat.set(1.5, -1.5);
-          videoTexture.offset.set(0, -0.15);
           
           child.material = originalMaterial;
           child.material.needsUpdate = true;
