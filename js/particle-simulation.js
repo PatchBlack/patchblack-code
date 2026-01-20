@@ -162,6 +162,12 @@ vrVideoTexture.center.set(0.5, 0.5);
 vrVideoTexture.repeat.set(1.0, -1.0);
 vrVideoTexture.offset.set(0, 0);
 
+console.log('📹 Videos created:', {
+  monitor: monitorVideo.src,
+  phone: phoneVideo.src,
+  vr: vrVideo.src
+});
+
 // Start monitor video (index 0 is default)
 monitorVideo.play().catch(err => console.log('Monitor video autoplay blocked:', err));
 
@@ -326,10 +332,13 @@ async function loadModels() {
     { model: mobileModel, index: 1 },
     { model: vrModel, index: 2 }
   ].forEach(({ model, index }) => {
+    console.log(`🔍 Traversing model ${index} (${shapeNames[index]})`);
     model.traverse((child) => {
       if (child.isMesh) {
+        console.log(`  Found mesh: "${child.name}" in ${shapeNames[index]}`);
         // Apply video textures to screen meshes
         if (child.name === 'monitor_screen' && index === 0) {
+          console.log('  ✅ Applying MONITOR video texture');
           const screenMat = new THREE.MeshStandardMaterial({
             map: monitorVideoTexture,
             emissive: new THREE.Color(0xffffff),
@@ -343,6 +352,7 @@ async function loadModels() {
           child.material = screenMat;
           venetianMaterials.push(screenMat);
         } else if (child.name === 'phone_screen' && index === 1) {
+          console.log('  ✅ Applying PHONE video texture');
           const screenMat = new THREE.MeshStandardMaterial({
             map: phoneVideoTexture,
             emissive: new THREE.Color(0xffffff),
@@ -356,6 +366,7 @@ async function loadModels() {
           child.material = screenMat;
           venetianMaterials.push(screenMat);
         } else if (child.name === 'vr_screen' && index === 2) {
+          console.log('  ✅ Applying VR video texture');
           const screenMat = new THREE.MeshStandardMaterial({
             map: vrVideoTexture,
             emissive: new THREE.Color(0xffffff),
@@ -643,10 +654,12 @@ function setupMouse() {
 // ==========================================
 
 function updateVideoPlayback() {
+  console.log(`🎬 updateVideoPlayback - currentShapeIndex: ${currentShapeIndex} (${shapeNames[currentShapeIndex]})`);
   // Pause all videos first
   monitorVideo.pause();
   phoneVideo.pause();
   vrVideo.pause();
+  console.log('  ⏸️ All videos paused');
   
   // Play only the current device's video
   if (currentShapeIndex === 0) {
@@ -657,6 +670,15 @@ function updateVideoPlayback() {
     vrVideo.play().catch(err => console.log('VR video play failed:', err));
   }
 }
+
+setInterval(() => {
+  console.log('📊 Video States:', {
+    monitor: { paused: monitorVideo.paused, readyState: monitorVideo.readyState },
+    phone: { paused: phoneVideo.paused, readyState: phoneVideo.readyState },
+    vr: { paused: vrVideo.paused, readyState: vrVideo.readyState },
+    currentShape: shapeNames[currentShapeIndex]
+  });
+}, 2000);
 
 // ==========================================
 // MORPHING
