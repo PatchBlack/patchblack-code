@@ -178,7 +178,7 @@ canvasTexture.minFilter = THREE.LinearFilter;
 canvasTexture.magFilter = THREE.LinearFilter;
 
 canvasTexture.center.set(0.5, 0.5);
-canvasTexture.repeat.set(-1.5, -1.5);  // Change these for bars
+canvasTexture.repeat.set(-1, -1);  // Change these for bars
 canvasTexture.offset.set(0, -0.15);
 
 // ===== VIDEO SETUP =====
