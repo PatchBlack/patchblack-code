@@ -179,7 +179,7 @@ canvasTexture.magFilter = THREE.LinearFilter;
 
 // ===== VIDEO SETUP =====
 const video = document.createElement('video');
-video.src = `${ASSET_BASE}/assets/videos/boombox-idle.mp4`;
+video.src = `${ASSET_BASE}/assets/video/boombox-idle.mp4`;
 video.loop = true;
 video.muted = true;
 video.playsInline = true;
