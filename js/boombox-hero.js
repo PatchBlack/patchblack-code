@@ -167,13 +167,6 @@ const dataArray = new Uint8Array(bufferLength);
 audioSource.connect(analyser);
 analyser.connect(audioContext.destination);
 
-audio.addEventListener("ended", () => {
-  isPlaying = false;
-  if (tapeAction) tapeAction.paused = true;
-  animateButton(playButton, 0);
-  updateCursorText();
-});
-
 // ===== CANVAS WAVEFORM =====
 const canvas = document.createElement('canvas');
 canvas.width = 512;
@@ -184,14 +177,28 @@ const canvasTexture = new THREE.CanvasTexture(canvas);
 canvasTexture.minFilter = THREE.LinearFilter;
 canvasTexture.magFilter = THREE.LinearFilter;
 
-function drawWaveform() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+// ===== VIDEO SETUP =====
+const video = document.createElement('video');
+video.src = `${ASSET_BASE}/assets/videos/boombox-idle.mp4`;
+video.loop = true;
+video.muted = true;
+video.playsInline = true;
+video.crossOrigin = "anonymous";
 
+const videoTexture = new THREE.VideoTexture(video);
+videoTexture.minFilter = THREE.LinearFilter;
+videoTexture.magFilter = THREE.LinearFilter;
+
+// Start video playing
+video.play().catch(err => console.log('Video autoplay blocked:', err));
+
+function drawWaveform() {
   if (!isPlaying) {
-    canvasTexture.needsUpdate = true;
+    // Don't clear - keep frozen bars when paused
     return;
   }
 
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
   analyser.getByteFrequencyData(dataArray);
 
   const barCount = 28;
@@ -242,6 +249,9 @@ const clock = new THREE.Clock();
 let playButton = null;
 let pauseButton = null;
 const buttonInitialRotations = new Map();
+
+let speaker1Material = null;
+let speaker2Material = null;
 
 const gsap = {
   to: (target, props) => {
@@ -380,6 +390,7 @@ window.addEventListener('touchend', () => {
 window.addEventListener('touchcancel', () => {
   isTouching = false;
 });
+
 // ===== TEXT ANIMATION =====
 function updateCursorText() {
   const cursorText = document.getElementById('cursor-text');
@@ -457,18 +468,24 @@ loader.load(
       if (child.isMesh) {
         if (child.name === 'Speakers_001' || child.name === 'Speakers_002') {
           const originalMaterial = child.material.clone();
-          originalMaterial.map = canvasTexture;
-          originalMaterial.emissive = new THREE.Color(0xffd441);
-          originalMaterial.emissiveMap = canvasTexture;
-          originalMaterial.emissiveIntensity = 1.5;
+          
+          // Start with video texture
+          originalMaterial.map = videoTexture;
+          originalMaterial.emissive = new THREE.Color(0x444444);
+          originalMaterial.emissiveMap = videoTexture;
+          originalMaterial.emissiveIntensity = 0.8;
           originalMaterial.transparent = true;
           
-          canvasTexture.center.set(0.5, 0.5);
-          canvasTexture.repeat.set(1.5, -1.5);
-          canvasTexture.offset.set(0, -0.15);
+          videoTexture.center.set(0.5, 0.5);
+          videoTexture.repeat.set(1.5, -1.5);
+          videoTexture.offset.set(0, -0.15);
           
           child.material = originalMaterial;
           child.material.needsUpdate = true;
+          
+          // Store references
+          if (child.name === 'Speakers_001') speaker1Material = originalMaterial;
+          if (child.name === 'Speakers_002') speaker2Material = originalMaterial;
         } else if (child.material) {
           child.material.envMapIntensity = 1.5;
           child.material.needsUpdate = true;
@@ -504,6 +521,34 @@ loader.load(
   (error) => console.error('❌ Error loading boombox model:', error)
 );
 
+// ===== AUDIO ENDED EVENT =====
+audio.addEventListener("ended", () => {
+  isPlaying = false;
+  if (tapeAction) tapeAction.paused = true;
+  animateButton(playButton, 0);
+  
+  // Switch back to video
+  if (speaker1Material) {
+    speaker1Material.map = videoTexture;
+    speaker1Material.emissiveMap = videoTexture;
+    speaker1Material.emissive.set(0x444444);
+    speaker1Material.emissiveIntensity = 0.8;
+    speaker1Material.needsUpdate = true;
+  }
+  if (speaker2Material) {
+    speaker2Material.map = videoTexture;
+    speaker2Material.emissiveMap = videoTexture;
+    speaker2Material.emissive.set(0x444444);
+    speaker2Material.emissiveIntensity = 0.8;
+    speaker2Material.needsUpdate = true;
+  }
+  
+  // Resume video
+  video.play();
+  
+  updateCursorText();
+});
+
 // ===== AUDIO TOGGLE LOGIC =====
 function toggleAudio() {
   if (audioContext.state === "suspended") {
@@ -515,11 +560,14 @@ function toggleAudio() {
 
 function performToggle() {
   if (isPlaying) {
+    // PAUSE
     audio.pause();
     if (tapeAction) tapeAction.paused = true;
     if (pauseButton) animateButton(pauseButton, 16);
     isPlaying = false;
+    // Bars stay frozen - don't switch textures
   } else {
+    // PLAY
     const playPromise = audio.play();
     if (playPromise !== undefined) {
       playPromise.then(() => {
@@ -530,6 +578,26 @@ function performToggle() {
         if (pauseButton) animateButton(pauseButton, 0);
         animateButton(playButton, 16);
         isPlaying = true;
+        
+        // Switch to canvas (bars)
+        if (speaker1Material) {
+          speaker1Material.map = canvasTexture;
+          speaker1Material.emissiveMap = canvasTexture;
+          speaker1Material.emissive.set(0xffd441);
+          speaker1Material.emissiveIntensity = 1.5;
+          speaker1Material.needsUpdate = true;
+        }
+        if (speaker2Material) {
+          speaker2Material.map = canvasTexture;
+          speaker2Material.emissiveMap = canvasTexture;
+          speaker2Material.emissive.set(0xffd441);
+          speaker2Material.emissiveIntensity = 1.5;
+          speaker2Material.needsUpdate = true;
+        }
+        
+        // Pause video
+        video.pause();
+        
         updateCursorText();
       }).catch(error => {
         console.error("Playback failed:", error);
@@ -587,7 +655,6 @@ function handleResponsiveness() {
   const box = new THREE.Box3().setFromObject(boombox);
   const center = box.getCenter(new THREE.Vector3());
   boombox.position.sub(center);
-
 }
 
 // Debounced resize handler
