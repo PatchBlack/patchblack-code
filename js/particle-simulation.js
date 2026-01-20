@@ -339,7 +339,7 @@ const [monitorGltf, mobileGltf, vrGltf] = await Promise.all([
       console.log(`  Found mesh: "${child.name}" in ${shapeNames[index]}`);
       
       // Apply video textures to screen meshes
-      if (child.name === 'monitor001_low_monitor_0814' && index === 0) {
+      if (child.name === 'monitor_screen' && index === 0) {
         console.log('  ✅ Applying MONITOR video texture');
         const screenMat = new THREE.MeshStandardMaterial({
           map: monitorVideoTexture,
@@ -353,7 +353,7 @@ const [monitorGltf, mobileGltf, vrGltf] = await Promise.all([
         });
         child.material = screenMat;
         venetianMaterials.push(screenMat);
-      } else if (child.name === 'SmartPhone_Plastic_0' && index === 1) {
+      } else if (child.name === 'phone_screen' && index === 1) {
         console.log('  ✅ Applying PHONE video texture');
         const screenMat = new THREE.MeshStandardMaterial({
           map: phoneVideoTexture,
@@ -367,7 +367,7 @@ const [monitorGltf, mobileGltf, vrGltf] = await Promise.all([
         });
         child.material = screenMat;
         venetianMaterials.push(screenMat);
-      } else if (child.name === 'Object_7003_11' && index === 2) {
+      } else if (child.name === 'vr_screen' && index === 2) {
         console.log('  ✅ Applying VR video texture');
         const screenMat = new THREE.MeshStandardMaterial({
           map: vrVideoTexture,
