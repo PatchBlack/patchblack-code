@@ -473,7 +473,7 @@ loader.load(
           originalMaterial.map = videoTexture;
           originalMaterial.emissive = new THREE.Color(0x444444);
           originalMaterial.emissiveMap = videoTexture;
-          originalMaterial.emissiveIntensity = 2.0;
+          originalMaterial.emissiveIntensity = 8.0;
           originalMaterial.transparent = true;
           
           videoTexture.center.set(0.5, 0.5);
@@ -532,14 +532,14 @@ audio.addEventListener("ended", () => {
     speaker1Material.map = videoTexture;
     speaker1Material.emissiveMap = videoTexture;
     speaker1Material.emissive.set(0x444444);
-    speaker1Material.emissiveIntensity = 0.8;
+    speaker1Material.emissiveIntensity = 8.0;
     speaker1Material.needsUpdate = true;
   }
   if (speaker2Material) {
     speaker2Material.map = videoTexture;
     speaker2Material.emissiveMap = videoTexture;
     speaker2Material.emissive.set(0x444444);
-    speaker2Material.emissiveIntensity = 0.8;
+    speaker2Material.emissiveIntensity = 8.0;
     speaker2Material.needsUpdate = true;
   }
   
