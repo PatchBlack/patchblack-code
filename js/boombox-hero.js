@@ -178,7 +178,7 @@ canvasTexture.minFilter = THREE.LinearFilter;
 canvasTexture.magFilter = THREE.LinearFilter;
 
 canvasTexture.center.set(0.5, 0.5);
-canvasTexture.repeat.set(1.5, 1.5);  // Change these for bars
+canvasTexture.repeat.set(-1.5, -1.5);  // Change these for bars
 canvasTexture.offset.set(0, -0.15);
 
 // ===== VIDEO SETUP =====
@@ -194,8 +194,8 @@ videoTexture.minFilter = THREE.LinearFilter;
 videoTexture.magFilter = THREE.LinearFilter;
 
 videoTexture.center.set(0.5, 0.5);
-videoTexture.repeat.set(2.5, 2.5);  // Change these for video
-videoTexture.offset.set(0, -0.15);
+videoTexture.repeat.set(1, 1);  // Change these for video
+videoTexture.offset.set(0, 0);
 
 // Start video playing
 video.play().catch(err => console.log('Video autoplay blocked:', err));
