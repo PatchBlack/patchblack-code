@@ -108,6 +108,64 @@ const venetianMaterials = [];
 let particleColors = null;
 
 // ==========================================
+// VIDEO SETUP
+// ==========================================
+
+// Monitor video
+const monitorVideo = document.createElement('video');
+monitorVideo.src = `${ASSET_BASE}/assets/video/Devices-01.mp4`;
+monitorVideo.loop = true;
+monitorVideo.muted = true;
+monitorVideo.playsInline = true;
+monitorVideo.crossOrigin = "anonymous";
+
+const monitorVideoTexture = new THREE.VideoTexture(monitorVideo);
+monitorVideoTexture.minFilter = THREE.LinearFilter;
+monitorVideoTexture.magFilter = THREE.LinearFilter;
+
+// MONITOR VIDEO SCALING
+monitorVideoTexture.center.set(0.5, 0.5);
+monitorVideoTexture.repeat.set(1.0, -1.0);
+monitorVideoTexture.offset.set(0, 0);
+
+// Phone video
+const phoneVideo = document.createElement('video');
+phoneVideo.src = `${ASSET_BASE}/assets/video/Devices-01.mp4`;
+phoneVideo.loop = true;
+phoneVideo.muted = true;
+phoneVideo.playsInline = true;
+phoneVideo.crossOrigin = "anonymous";
+
+const phoneVideoTexture = new THREE.VideoTexture(phoneVideo);
+phoneVideoTexture.minFilter = THREE.LinearFilter;
+phoneVideoTexture.magFilter = THREE.LinearFilter;
+
+// PHONE VIDEO SCALING
+phoneVideoTexture.center.set(0.5, 0.5);
+phoneVideoTexture.repeat.set(1.0, -1.0);
+phoneVideoTexture.offset.set(0, 0);
+
+// VR video
+const vrVideo = document.createElement('video');
+vrVideo.src = `${ASSET_BASE}/assets/video/Devices-01.mp4`;
+vrVideo.loop = true;
+vrVideo.muted = true;
+vrVideo.playsInline = true;
+vrVideo.crossOrigin = "anonymous";
+
+const vrVideoTexture = new THREE.VideoTexture(vrVideo);
+vrVideoTexture.minFilter = THREE.LinearFilter;
+vrVideoTexture.magFilter = THREE.LinearFilter;
+
+// VR VIDEO SCALING
+vrVideoTexture.center.set(0.5, 0.5);
+vrVideoTexture.repeat.set(1.0, -1.0);
+vrVideoTexture.offset.set(0, 0);
+
+// Start monitor video (index 0 is default)
+monitorVideo.play().catch(err => console.log('Monitor video autoplay blocked:', err));
+
+// ==========================================
 // TEXT TRANSITIONS
 // ==========================================
 
@@ -270,11 +328,54 @@ async function loadModels() {
   ].forEach(({ model, index }) => {
     model.traverse((child) => {
       if (child.isMesh) {
-        const newMat = createVenetianMaterial(child.material, index, envMap);
-        child.material = newMat;
-        child.castShadow = true;
-        child.receiveShadow = true;
-        venetianMaterials.push(newMat);
+        // Apply video textures to screen meshes
+        if (child.name === 'monitor_screen' && index === 0) {
+          const screenMat = new THREE.MeshStandardMaterial({
+            map: monitorVideoTexture,
+            emissive: new THREE.Color(0xffffff),
+            emissiveMap: monitorVideoTexture,
+            emissiveIntensity: 8.0,
+            roughness: 0.3,
+            metalness: 0.5,
+            envMap: envMap,
+            envMapIntensity: 1.5
+          });
+          child.material = screenMat;
+          venetianMaterials.push(screenMat);
+        } else if (child.name === 'phone_screen' && index === 1) {
+          const screenMat = new THREE.MeshStandardMaterial({
+            map: phoneVideoTexture,
+            emissive: new THREE.Color(0xffffff),
+            emissiveMap: phoneVideoTexture,
+            emissiveIntensity: 8.0,
+            roughness: 0.3,
+            metalness: 0.5,
+            envMap: envMap,
+            envMapIntensity: 1.5
+          });
+          child.material = screenMat;
+          venetianMaterials.push(screenMat);
+        } else if (child.name === 'vr_screen' && index === 2) {
+          const screenMat = new THREE.MeshStandardMaterial({
+            map: vrVideoTexture,
+            emissive: new THREE.Color(0xffffff),
+            emissiveMap: vrVideoTexture,
+            emissiveIntensity: 8.0,
+            roughness: 0.3,
+            metalness: 0.5,
+            envMap: envMap,
+            envMapIntensity: 1.5
+          });
+          child.material = screenMat;
+          venetianMaterials.push(screenMat);
+        } else {
+          // Apply venetian material to other meshes
+          const newMat = createVenetianMaterial(child.material, index, envMap);
+          child.material = newMat;
+          child.castShadow = true;
+          child.receiveShadow = true;
+          venetianMaterials.push(newMat);
+        }
       }
     });
   });
@@ -538,6 +639,26 @@ function setupMouse() {
 }
 
 // ==========================================
+// VIDEO PLAYBACK CONTROL
+// ==========================================
+
+function updateVideoPlayback() {
+  // Pause all videos first
+  monitorVideo.pause();
+  phoneVideo.pause();
+  vrVideo.pause();
+  
+  // Play only the current device's video
+  if (currentShapeIndex === 0) {
+    monitorVideo.play().catch(err => console.log('Monitor video play failed:', err));
+  } else if (currentShapeIndex === 1) {
+    phoneVideo.play().catch(err => console.log('Phone video play failed:', err));
+  } else if (currentShapeIndex === 2) {
+    vrVideo.play().catch(err => console.log('VR video play failed:', err));
+  }
+}
+
+// ==========================================
 // MORPHING
 // ==========================================
 
@@ -592,6 +713,10 @@ function updateMorphing(deltaTime, rotationDelta) {
       morphProgress = 1.0;
       currentShapeIndex = nextShapeIndex;
       manualMorphDirection = 0; // Reset direction
+      
+      // Update video playback
+      updateVideoPlayback();
+      
       console.log(`✅ MORPH COMPLETE: Now ${shapeNames[currentShapeIndex]}`);
     }
   }
@@ -972,9 +1097,14 @@ function setupIntersectionObserver() {
       if (entry.isIntersecting) {
         console.log('✅ Particle sim visible - resuming');
         renderer.setAnimationLoop(render);
+        updateVideoPlayback(); // Resume correct video
       } else {
         console.log('⏸️ Particle sim hidden - pausing');
         renderer.setAnimationLoop(null);
+        // Pause all videos when off-screen
+        monitorVideo.pause();
+        phoneVideo.pause();
+        vrVideo.pause();
       }
     });
   }, {
