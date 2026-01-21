@@ -183,6 +183,22 @@ function updateTextContent(shapeIndex) {
   }, 300);
 }
 
+function updateButtonState(shapeIndex) {
+  const key = SHAPE_KEYS[shapeIndex];
+  const url = CONTENT[key].url;
+  const mainText = document.getElementById('cursor-text');
+  
+  if (mainText) {
+    if (!url || url === '') {
+      mainText.textContent = 'ACCESS DENIED';
+      console.log(`🚫 Button set to ACCESS DENIED for ${key}`);
+    } else {
+      mainText.textContent = 'VIEW DEMO';
+      console.log(`✅ Button set to VIEW DEMO for ${key}`);
+    }
+  }
+}
+
 function initTextTransitions() {
   const heading = document.getElementById('particle-heading');
   const description = document.getElementById('description-text');
@@ -193,6 +209,7 @@ function initTextTransitions() {
   });
   
   updateTextContent(0);
+  updateButtonState(0);
 }
 // ==========================================
 // BUTTON NAVIGATION
@@ -230,10 +247,6 @@ function setupCTAButton() {
   
   const ctaWrapper = document.getElementById('cta-wrapper');
   const mainButton = document.querySelector('.cursor-button-main');
-  const mainText = document.getElementById('cursor-text');
-  
-  console.log('🔍 Main button:', mainButton);
-  console.log('🔍 Main text span:', mainText);
   
   if (ctaWrapper) {
     ctaWrapper.addEventListener('click', (e) => {
@@ -245,32 +258,26 @@ function setupCTAButton() {
       console.log('🔍 URL:', url);
       
       if (!url || url === '') {
-        console.log('⚠️ ACCESS DENIED');
+        console.log('🚫 ACCESS DENIED - Animating');
         
-        // ONLY change main button text
-        if (mainText) {
-          mainText.textContent = 'ACCESS DENIED';
-          console.log('✅ Main text changed to:', mainText.textContent);
-        }
-        
-        // Add class to main button only
+        // Just animate - text is already "ACCESS DENIED"
         if (mainButton) {
           mainButton.classList.add('access-denied');
-          console.log('✅ Class added to main button');
+          
+          // Remove animation class after it completes
+          setTimeout(() => {
+            mainButton.classList.remove('access-denied');
+          }, 500); // 0.5s = animation duration
         }
-        
-        // Reset after 2 seconds
-        setTimeout(() => {
-          if (mainText) mainText.textContent = 'VIEW DEMO';
-          if (mainButton) mainButton.classList.remove('access-denied');
-          console.log('🔄 Reset complete');
-        }, 2000);
         
       } else {
         console.log('✅ Navigating to:', url);
         window.location.href = url;
       }
     }, true);
+    
+    // Set initial button state
+    updateButtonState(currentShapeIndex);
   }
 }
 
@@ -705,6 +712,7 @@ function updateMorphing(deltaTime, rotationDelta) {
       currentShapeIndex = nextShapeIndex;
       manualMorphDirection = 0;
       updateVideoPlayback();
+       updateButtonState(currentShapeIndex);
     }
   }
 
