@@ -112,7 +112,7 @@ let particleColors = null;
 // ==========================================
 
 const monitorVideo = document.createElement('video');
-monitorVideo.src = `${ASSET_BASE}/assets/video/Devices-01.mp4`;
+monitorVideo.src = `${ASSET_BASE}/assets/video/particleSim-idle.mp4`;
 monitorVideo.loop = true;
 monitorVideo.muted = true;
 monitorVideo.playsInline = true;
@@ -126,7 +126,7 @@ monitorVideoTexture.repeat.set(0.75, -0.9);
 monitorVideoTexture.offset.set(0, 0);
 
 const phoneVideo = document.createElement('video');
-phoneVideo.src = `${ASSET_BASE}/assets/video/Devices-01.mp4`;
+phoneVideo.src = `${ASSET_BASE}/assets/video/particleSim-idle-01.mp4`;
 phoneVideo.loop = true;
 phoneVideo.muted = true;
 phoneVideo.playsInline = true;
@@ -140,7 +140,7 @@ phoneVideoTexture.repeat.set(0.75, -0.75);
 phoneVideoTexture.offset.set(0, 0);
 
 const vrVideo = document.createElement('video');
-vrVideo.src = `${ASSET_BASE}/assets/video/Devices-01.mp4`;
+vrVideo.src = `${ASSET_BASE}/assets/video/particleSim-idle.mp4`;
 vrVideo.loop = true;
 vrVideo.muted = true;
 vrVideo.playsInline = true;
@@ -329,9 +329,9 @@ async function loadModels() {
   envMap.mapping = THREE.EquirectangularReflectionMapping;
 
   const [monitorGltf, mobileGltf, vrGltf] = await Promise.all([
-    modelLoader.loadAsync(`${ASSET_BASE}/assets/models/monitor-v2.glb`),
-    modelLoader.loadAsync(`${ASSET_BASE}/assets/models/mobile-v2.glb`),
-    modelLoader.loadAsync(`${ASSET_BASE}/assets/models/vr-glass-v2.glb`),
+    modelLoader.loadAsync(`${ASSET_BASE}/assets/models/monitor-v3.glb`),
+    modelLoader.loadAsync(`${ASSET_BASE}/assets/models/mobile-v3.glb`),
+    modelLoader.loadAsync(`${ASSET_BASE}/assets/models/vr-glass-v3.glb`),
   ]);
 
   const monitorContainer = new THREE.Group();
@@ -366,7 +366,7 @@ async function loadModels() {
           screenMat.map = monitorVideoTexture;
           screenMat.emissive = new THREE.Color(0xcccccc);
           screenMat.emissiveMap = monitorVideoTexture;
-          screenMat.emissiveIntensity = 1.0;
+          screenMat.emissiveIntensity = 5.0;
           screenMat.roughness = 0.3;
           screenMat.metalness = 0.5;
           screenMat.transparent = true;
@@ -380,7 +380,7 @@ async function loadModels() {
           screenMat.map = phoneVideoTexture;
           screenMat.emissive = new THREE.Color(0xcccccc);
           screenMat.emissiveMap = phoneVideoTexture;
-          screenMat.emissiveIntensity = 1.0;
+          screenMat.emissiveIntensity = 5.0;
           screenMat.roughness = 0.3;
           screenMat.metalness = 0.5;
           screenMat.transparent = true;
@@ -394,7 +394,7 @@ async function loadModels() {
           screenMat.map = vrVideoTexture;
           screenMat.emissive = new THREE.Color(0xcccccc);
           screenMat.emissiveMap = vrVideoTexture;
-          screenMat.emissiveIntensity = 1.0;
+          screenMat.emissiveIntensity = 5.0;
           screenMat.roughness = 0.3;
           screenMat.metalness = 0.5;
           screenMat.transparent = true;
