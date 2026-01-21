@@ -16,19 +16,19 @@ const CONTENT = {
     heading: "Product Stories",
     description: "Interactive narratives that turn complex content into clear, engaging digital products.",
     subtext: "Reports · Case studies · Platforms",
-    url: "/temp-demo"
+    url: "/product-stories"  // Change to your actual URL, or leave empty "" to show popup
   },
   phone: {
     heading: "Living Interfaces",
     description: "Interactions designed to respond, adapt, and guide users through story-led experiences.",
     subtext: "Apps · Web apps · Interactive systems",
-    url: "/temp-demo"
+    url: "/living-interfaces"  // Change to your actual URL, or leave empty "" to show popup
   },
   vr: {
     heading: "Immersive Narratives",
     description: "Stories extended into spatial and immersive environments that invite exploration.",
     subtext: "AR · VR · Spatial experiences",
-    url: "/temp-demo"
+    url: "/immersive-narratives"  // Change to your actual URL, or leave empty "" to show popup
   }
 };
 
@@ -122,7 +122,7 @@ const monitorVideoTexture = new THREE.VideoTexture(monitorVideo);
 monitorVideoTexture.minFilter = THREE.LinearFilter;
 monitorVideoTexture.magFilter = THREE.LinearFilter;
 monitorVideoTexture.center.set(0.5, 0.5);
-monitorVideoTexture.repeat.set(1.5, -1.8);
+monitorVideoTexture.repeat.set(0.75, -1);
 monitorVideoTexture.offset.set(0, 0);
 
 const phoneVideo = document.createElement('video');
@@ -136,7 +136,7 @@ const phoneVideoTexture = new THREE.VideoTexture(phoneVideo);
 phoneVideoTexture.minFilter = THREE.LinearFilter;
 phoneVideoTexture.magFilter = THREE.LinearFilter;
 phoneVideoTexture.center.set(0.5, 0.5);
-phoneVideoTexture.repeat.set(1.5, -1.5);
+phoneVideoTexture.repeat.set(0.75, -0.75);
 phoneVideoTexture.offset.set(0, 0);
 
 const vrVideo = document.createElement('video');
@@ -150,7 +150,7 @@ const vrVideoTexture = new THREE.VideoTexture(vrVideo);
 vrVideoTexture.minFilter = THREE.LinearFilter;
 vrVideoTexture.magFilter = THREE.LinearFilter;
 vrVideoTexture.center.set(0.5, 0.5);
-vrVideoTexture.repeat.set(1.5, -1.5);
+vrVideoTexture.repeat.set(0.75, -0.75);
 vrVideoTexture.offset.set(0, 0);
 
 monitorVideo.play().catch(err => {});
@@ -277,19 +277,33 @@ function setupNavButtons() {
 }
 
 function setupCTAButton() {
+  console.log('🔍 Setting up CTA button...');
+  
   const ctaWrapper = document.getElementById('cta-wrapper');
+  console.log('🔍 CTA wrapper found:', ctaWrapper);
   
   if (ctaWrapper) {
     ctaWrapper.addEventListener('click', (e) => {
+      console.log('🖱️ CTA wrapper clicked!');
+      console.log('🔍 Click target:', e.target);
+      console.log('🔍 Current target:', e.currentTarget);
+      
       const key = SHAPE_KEYS[currentShapeIndex];
       const url = CONTENT[key].url;
       
-      if (!url || url === '' || url === '/temp-demo') {
+      console.log('🔍 Current shape:', key);
+      console.log('🔍 URL:', url);
+      
+      // Only show popup if URL is truly empty/undefined
+      if (!url || url === '') {
+        console.log('⚠️ No URL - showing popup');
         showPopup();
       } else {
+        console.log('✅ Navigating to:', url);
         window.location.href = url;
       }
     }, true);
+    console.log('✅ CTA wrapper listener attached');
   }
 }
 
@@ -352,7 +366,7 @@ async function loadModels() {
           screenMat.map = monitorVideoTexture;
           screenMat.emissive = new THREE.Color(0xcccccc);
           screenMat.emissiveMap = monitorVideoTexture;
-          screenMat.emissiveIntensity = 2.0;
+          screenMat.emissiveIntensity = 5.0;
           screenMat.roughness = 0.3;
           screenMat.metalness = 0.5;
           screenMat.transparent = true;
@@ -366,7 +380,7 @@ async function loadModels() {
           screenMat.map = phoneVideoTexture;
           screenMat.emissive = new THREE.Color(0xcccccc);
           screenMat.emissiveMap = phoneVideoTexture;
-          screenMat.emissiveIntensity = 2.0;
+          screenMat.emissiveIntensity = 5.0;
           screenMat.roughness = 0.3;
           screenMat.metalness = 0.5;
           screenMat.transparent = true;
@@ -380,7 +394,7 @@ async function loadModels() {
           screenMat.map = vrVideoTexture;
           screenMat.emissive = new THREE.Color(0xcccccc);
           screenMat.emissiveMap = vrVideoTexture;
-          screenMat.emissiveIntensity = 2.0;
+          screenMat.emissiveIntensity = 5.0;
           screenMat.roughness = 0.3;
           screenMat.metalness = 0.5;
           screenMat.transparent = true;
