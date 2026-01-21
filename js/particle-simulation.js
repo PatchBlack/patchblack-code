@@ -186,7 +186,7 @@ function updateTextContent(shapeIndex) {
 function updateButtonState(shapeIndex) {
   const key = SHAPE_KEYS[shapeIndex];
   const url = CONTENT[key].url;
-  const mainText = document.getElementById('cursor-text');
+  const mainText = document.getElementById('particle-cursor-text');
   
   if (mainText) {
     if (!url || url === '') {
@@ -208,7 +208,7 @@ const observer = new MutationObserver((mutations) => {
 });
 
 setTimeout(() => {
-  const mainText = document.getElementById('cursor-text');
+  const ctaWrapper = document.getElementById('particle-cta-wrapper');
   if (mainText) {
     observer.observe(mainText, { 
       childList: true, 
