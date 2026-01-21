@@ -63,7 +63,7 @@ let isWave2Active = false;
 const wave2PreDelay = 0;
 const wave2PostDelay = 0.5;
 let morphQueued = false;
-let manualMorphDirection = 0; // 0=auto, 1=next, -1=prev
+let manualMorphDirection = 0;
 
 const shapeNames = ['Monitor', 'Phone', 'VR'];
 
@@ -111,7 +111,6 @@ let particleColors = null;
 // VIDEO SETUP
 // ==========================================
 
-// Monitor video
 const monitorVideo = document.createElement('video');
 monitorVideo.src = `${ASSET_BASE}/assets/video/Devices-01.mp4`;
 monitorVideo.loop = true;
@@ -122,13 +121,10 @@ monitorVideo.crossOrigin = "anonymous";
 const monitorVideoTexture = new THREE.VideoTexture(monitorVideo);
 monitorVideoTexture.minFilter = THREE.LinearFilter;
 monitorVideoTexture.magFilter = THREE.LinearFilter;
-
-// MONITOR VIDEO SCALING
 monitorVideoTexture.center.set(0.5, 0.5);
-monitorVideoTexture.repeat.set(1.0, -1.0);
+monitorVideoTexture.repeat.set(1.5, -1.8);
 monitorVideoTexture.offset.set(0, 0);
 
-// Phone video
 const phoneVideo = document.createElement('video');
 phoneVideo.src = `${ASSET_BASE}/assets/video/Devices-01.mp4`;
 phoneVideo.loop = true;
@@ -139,13 +135,10 @@ phoneVideo.crossOrigin = "anonymous";
 const phoneVideoTexture = new THREE.VideoTexture(phoneVideo);
 phoneVideoTexture.minFilter = THREE.LinearFilter;
 phoneVideoTexture.magFilter = THREE.LinearFilter;
-
-// PHONE VIDEO SCALING
 phoneVideoTexture.center.set(0.5, 0.5);
-phoneVideoTexture.repeat.set(1.0, -1.0);
+phoneVideoTexture.repeat.set(1.5, -1.5);
 phoneVideoTexture.offset.set(0, 0);
 
-// VR video
 const vrVideo = document.createElement('video');
 vrVideo.src = `${ASSET_BASE}/assets/video/Devices-01.mp4`;
 vrVideo.loop = true;
@@ -156,20 +149,11 @@ vrVideo.crossOrigin = "anonymous";
 const vrVideoTexture = new THREE.VideoTexture(vrVideo);
 vrVideoTexture.minFilter = THREE.LinearFilter;
 vrVideoTexture.magFilter = THREE.LinearFilter;
-
-// VR VIDEO SCALING
 vrVideoTexture.center.set(0.5, 0.5);
-vrVideoTexture.repeat.set(1.0, -1.0);
+vrVideoTexture.repeat.set(1.5, -1.5);
 vrVideoTexture.offset.set(0, 0);
 
-console.log('📹 Videos created:', {
-  monitor: monitorVideo.src,
-  phone: phoneVideo.src,
-  vr: vrVideo.src
-});
-
-// Start monitor video (index 0 is default)
-monitorVideo.play().catch(err => console.log('Monitor video autoplay blocked:', err));
+monitorVideo.play().catch(err => {});
 
 // ==========================================
 // TEXT TRANSITIONS
@@ -183,20 +167,16 @@ function updateTextContent(shapeIndex) {
   const description = document.getElementById('description-text');
   const subtext = document.getElementById('description-subtext');
   
-  // Fade out
   heading.style.opacity = '0';
   description.style.opacity = '0';
   subtext.style.opacity = '0';
   
   setTimeout(() => {
-    // Update content - FORCE 2 LINES for heading
     const headingLines = content.heading.split(' ');
-    heading.innerHTML = headingLines.join('<br>');  // Changed from textContent
-    
+    heading.innerHTML = headingLines.join('<br>');
     description.textContent = content.description;
     subtext.textContent = content.subtext;
     
-    // Fade in
     heading.style.opacity = '1';
     description.style.opacity = '1';
     subtext.style.opacity = '1';
@@ -208,13 +188,61 @@ function initTextTransitions() {
   const description = document.getElementById('description-text');
   const subtext = document.getElementById('description-subtext');
   
-  // Add transition CSS
   [heading, description, subtext].forEach(el => {
     el.style.transition = 'opacity 0.6s ease-in-out';
   });
   
-  // Set initial content
   updateTextContent(0);
+}
+
+// ==========================================
+// POPUP FUNCTIONALITY
+// ==========================================
+
+function showPopup() {
+  const popup = document.getElementById('chapter-popup');
+  const overlay = document.getElementById('popup-overlay');
+  
+  if (popup && overlay) {
+    overlay.style.display = 'flex';
+    overlay.offsetHeight;
+    overlay.classList.add('show');
+  }
+}
+
+function hidePopup() {
+  const popup = document.getElementById('chapter-popup');
+  const overlay = document.getElementById('popup-overlay');
+  
+  if (popup && overlay) {
+    overlay.classList.remove('show');
+    setTimeout(() => {
+      overlay.style.display = 'none';
+    }, 300);
+  }
+}
+
+function setupPopup() {
+  const closeBtn = document.getElementById('popup-close');
+  const overlay = document.getElementById('popup-overlay');
+  
+  if (closeBtn) {
+    closeBtn.addEventListener('click', hidePopup);
+  }
+  
+  if (overlay) {
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) {
+        hidePopup();
+      }
+    });
+  }
+  
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      hidePopup();
+    }
+  });
 }
 
 // ==========================================
@@ -228,7 +256,6 @@ function setupNavButtons() {
   if (prevBtn) {
     prevBtn.addEventListener('click', () => {
       if (morphProgress >= 1.0 && !isWave2Active && !morphQueued) {
-        console.log('👈 PREV button clicked');
         manualMorphDirection = -1;
         morphQueued = true;
         isWave2Active = true;
@@ -236,12 +263,10 @@ function setupNavButtons() {
       }
     });
   }
-
   
   if (nextBtn) {
     nextBtn.addEventListener('click', () => {
       if (morphProgress >= 1.0 && !isWave2Active && !morphQueued) {
-        console.log('👉 NEXT button clicked');
         manualMorphDirection = 1;
         morphQueued = true;
         isWave2Active = true;
@@ -251,36 +276,28 @@ function setupNavButtons() {
   }
 }
 
-
- function setupCTAButton() {
-  console.log('🔍 Setting up CTA button...');
-  
-  const ctaWrapper = document.getElementById('cta-wrapper');  // Changed from .cursor-button-main
-  console.log('🔍 CTA wrapper found:', ctaWrapper);
+function setupCTAButton() {
+  const ctaWrapper = document.getElementById('cta-wrapper');
   
   if (ctaWrapper) {
     ctaWrapper.addEventListener('click', (e) => {
-      console.log('🖱️ CTA wrapper clicked!');
-      console.log('🔍 Click target:', e.target);
-      console.log('🔍 Current target:', e.currentTarget);
-      
       const key = SHAPE_KEYS[currentShapeIndex];
       const url = CONTENT[key].url;
       
-      if (url) {
-        console.log('✅ Navigating to:', url);
+      if (!url || url === '' || url === '/temp-demo') {
+        showPopup();
+      } else {
         window.location.href = url;
       }
-    }, true);  // Added 'true' for capture phase
-    console.log('✅ CTA wrapper listener attached');
+    }, true);
   }
 }
+
 // ==========================================
 // LOADING
 // ==========================================
 
 async function loadParticlePositions() {
-  console.log('Loading particle positions...');
   const [cubeData, coneData, monkeyData] = await Promise.all([
     fetch(`${ASSET_BASE}/assets/particles/monitor-particle.json`).then((r) => r.json()),
     fetch(`${ASSET_BASE}/assets/particles/phone-particle.json`).then((r) => r.json()),
@@ -290,22 +307,18 @@ async function loadParticlePositions() {
   cubePositions = cubeData;
   conePositions = coneData;
   monkeyPositions = monkeyData;
-
-  console.log(`Loaded: ${cubePositions.length} cube, ${conePositions.length} cone, ${monkeyPositions.length} monkey`);
 }
 
 async function loadModels() {
-  console.log('Loading 3D models...');
-
   const hdrLoader = new HDRLoader();
   const envMap = await hdrLoader.loadAsync(`${ASSET_BASE}/assets/textures/royal_esplanade_1k.hdr`);
   envMap.mapping = THREE.EquirectangularReflectionMapping;
 
-const [monitorGltf, mobileGltf, vrGltf] = await Promise.all([
-  modelLoader.loadAsync(`${ASSET_BASE}/assets/models/monitor-v2.glb`),
-   modelLoader.loadAsync(`${ASSET_BASE}/assets/models/mobile-v2.glb`),
-   modelLoader.loadAsync(`${ASSET_BASE}/assets/models/vr-glass-v2.glb`),
-]);
+  const [monitorGltf, mobileGltf, vrGltf] = await Promise.all([
+    modelLoader.loadAsync(`${ASSET_BASE}/assets/models/monitor-v2.glb`),
+    modelLoader.loadAsync(`${ASSET_BASE}/assets/models/mobile-v2.glb`),
+    modelLoader.loadAsync(`${ASSET_BASE}/assets/models/vr-glass-v2.glb`),
+  ]);
 
   const monitorContainer = new THREE.Group();
   const mobileContainer = new THREE.Group();
@@ -328,73 +341,90 @@ const [monitorGltf, mobileGltf, vrGltf] = await Promise.all([
   vrModel.scale.setScalar(params.modelScale);
 
   [
-  { model: monitorModel, index: 0 },
-  { model: mobileModel, index: 1 },
-  { model: vrModel, index: 2 }
-].forEach(({ model, index }) => {
-  console.log(`🔍 Traversing model ${index} (${shapeNames[index]})`);
-  
-  model.traverse((child) => {
-    if (child.isMesh) {
-      console.log(`  Found mesh: "${child.name}" in ${shapeNames[index]}`);
-      
-      // Apply video textures to screen meshes
-      if (child.name === 'monitor_screen' && index === 0) {
-        console.log('  ✅ Applying MONITOR video texture');
-        const screenMat = child.material.clone();
-  screenMat.map = monitorVideoTexture;
-  screenMat.emissive = new THREE.Color(0xffffff);
-  screenMat.emissiveMap = monitorVideoTexture;
-  screenMat.emissiveIntensity = 8.0;
-  screenMat.roughness = 0.3;
-  screenMat.metalness = 0.5;
-  screenMat.transparent = true;
-  screenMat.envMap = envMap;
-  screenMat.envMapIntensity = 1.5;
-  screenMat.needsUpdate = true;
-  child.material = screenMat;
-  venetianMaterials.push(screenMat);
-      } else if (child.name === 'phone_screen' && index === 1) {
-        console.log('  ✅ Applying PHONE video texture');
-       const screenMat = child.material.clone();
-  screenMat.map = phoneVideoTexture;
-  screenMat.emissive = new THREE.Color(0xffffff);
-  screenMat.emissiveMap = phoneVideoTexture;
-  screenMat.emissiveIntensity = 8.0;
-  screenMat.roughness = 0.3;
-  screenMat.metalness = 0.5;
-  screenMat.transparent = true;
-  screenMat.envMap = envMap;
-  screenMat.envMapIntensity = 1.5;
-  screenMat.needsUpdate = true;
-  child.material = screenMat;
-  venetianMaterials.push(screenMat);
-      } else if (child.name === 'vr_screen' && index === 2) {
-        console.log('  ✅ Applying VR video texture');
-        const screenMat = child.material.clone();
-  screenMat.map = vrVideoTexture;
-  screenMat.emissive = new THREE.Color(0xffffff);
-  screenMat.emissiveMap = vrVideoTexture;
-  screenMat.emissiveIntensity = 8.0;
-  screenMat.roughness = 0.3;
-  screenMat.metalness = 0.5;
-  screenMat.transparent = true;
-  screenMat.envMap = envMap;
-  screenMat.envMapIntensity = 1.5;
-  screenMat.needsUpdate = true;
-  child.material = screenMat;
-  venetianMaterials.push(screenMat);
-      } else {
-        // Apply venetian material to other meshes
-        const newMat = createVenetianMaterial(child.material, index, envMap);
-        child.material = newMat;
-        child.castShadow = true;
-        child.receiveShadow = true;
-        venetianMaterials.push(newMat);
+    { model: monitorModel, index: 0 },
+    { model: mobileModel, index: 1 },
+    { model: vrModel, index: 2 }
+  ].forEach(({ model, index }) => {
+    model.traverse((child) => {
+      if (child.isMesh) {
+        if (child.name === 'monitor_screen' && index === 0) {
+          const screenMat = child.material.clone();
+          screenMat.map = monitorVideoTexture;
+          screenMat.emissive = new THREE.Color(0xcccccc);
+          screenMat.emissiveMap = monitorVideoTexture;
+          screenMat.emissiveIntensity = 2.0;
+          screenMat.roughness = 0.3;
+          screenMat.metalness = 0.5;
+          screenMat.transparent = true;
+          screenMat.envMap = envMap;
+          screenMat.envMapIntensity = 1.5;
+          screenMat.needsUpdate = true;
+          child.material = screenMat;
+          venetianMaterials.push(screenMat);
+        } else if (child.name === 'phone_screen' && index === 1) {
+          const screenMat = child.material.clone();
+          screenMat.map = phoneVideoTexture;
+          screenMat.emissive = new THREE.Color(0xcccccc);
+          screenMat.emissiveMap = phoneVideoTexture;
+          screenMat.emissiveIntensity = 2.0;
+          screenMat.roughness = 0.3;
+          screenMat.metalness = 0.5;
+          screenMat.transparent = true;
+          screenMat.envMap = envMap;
+          screenMat.envMapIntensity = 1.5;
+          screenMat.needsUpdate = true;
+          child.material = screenMat;
+          venetianMaterials.push(screenMat);
+        } else if (child.name === 'vr_screen' && index === 2) {
+          const screenMat = child.material.clone();
+          screenMat.map = vrVideoTexture;
+          screenMat.emissive = new THREE.Color(0xcccccc);
+          screenMat.emissiveMap = vrVideoTexture;
+          screenMat.emissiveIntensity = 2.0;
+          screenMat.roughness = 0.3;
+          screenMat.metalness = 0.5;
+          screenMat.transparent = true;
+          screenMat.envMap = envMap;
+          screenMat.envMapIntensity = 1.5;
+          screenMat.needsUpdate = true;
+          
+          screenMat.onBeforeCompile = (shader) => {
+            shader.uniforms.vignetteStrength = { value: 0.8 };
+            shader.uniforms.vignetteSize = { value: 0.6 };
+            
+            shader.fragmentShader = shader.fragmentShader.replace(
+              '#include <map_fragment>',
+              `
+              #include <map_fragment>
+              
+              vec2 uv = vUv;
+              vec2 center = vec2(0.5, 0.5);
+              float dist = distance(uv, center);
+              float vignette = smoothstep(vignetteSize, vignetteSize + 0.5, dist);
+              vignette = 1.0 - (vignette * vignetteStrength);
+              
+              diffuseColor.rgb *= vignette;
+              `
+            );
+            
+            shader.fragmentShader = `
+              uniform float vignetteStrength;
+              uniform float vignetteSize;
+            ` + shader.fragmentShader;
+          };
+          
+          child.material = screenMat;
+          venetianMaterials.push(screenMat);
+        } else {
+          const newMat = createVenetianMaterial(child.material, index, envMap);
+          child.material = newMat;
+          child.castShadow = true;
+          child.receiveShadow = true;
+          venetianMaterials.push(newMat);
+        }
       }
-    }
+    });
   });
-});
 
   monitorContainer.add(monitorModel);
   mobileContainer.add(mobileModel);
@@ -416,8 +446,6 @@ const [monitorGltf, mobileGltf, vrGltf] = await Promise.all([
     container.layers.set(1);
     container.traverse((child) => child.layers.set(1));
   });
-
-  console.log(`Created ${venetianMaterials.length} venetian materials`);
 }
 
 // ==========================================
@@ -659,31 +687,18 @@ function setupMouse() {
 // ==========================================
 
 function updateVideoPlayback() {
-  console.log(`🎬 updateVideoPlayback - currentShapeIndex: ${currentShapeIndex} (${shapeNames[currentShapeIndex]})`);
-  // Pause all videos first
   monitorVideo.pause();
   phoneVideo.pause();
   vrVideo.pause();
-  console.log('  ⏸️ All videos paused');
   
-  // Play only the current device's video
   if (currentShapeIndex === 0) {
-    monitorVideo.play().catch(err => console.log('Monitor video play failed:', err));
+    monitorVideo.play().catch(err => {});
   } else if (currentShapeIndex === 1) {
-    phoneVideo.play().catch(err => console.log('Phone video play failed:', err));
+    phoneVideo.play().catch(err => {});
   } else if (currentShapeIndex === 2) {
-    vrVideo.play().catch(err => console.log('VR video play failed:', err));
+    vrVideo.play().catch(err => {});
   }
 }
-
-setInterval(() => {
-  console.log('📊 Video States:', {
-    monitor: { paused: monitorVideo.paused, readyState: monitorVideo.readyState },
-    phone: { paused: phoneVideo.paused, readyState: phoneVideo.readyState },
-    vr: { paused: vrVideo.paused, readyState: vrVideo.readyState },
-    currentShape: shapeNames[currentShapeIndex]
-  });
-}, 2000);
 
 // ==========================================
 // MORPHING
@@ -693,16 +708,11 @@ function startMorph() {
   morphProgress = 0;
   modelMorphProgress = -modelMorphDelay;
   
-  // Calculate next shape based on direction
   if (manualMorphDirection === -1) {
-    // Previous
     nextShapeIndex = (currentShapeIndex - 1 + 3) % 3;
   } else {
-    // Next (or auto)
     nextShapeIndex = (currentShapeIndex + 1) % 3;
   }
-  
-  console.log(`✨ MORPH START: ${shapeNames[currentShapeIndex]} → ${shapeNames[nextShapeIndex]} (dir: ${manualMorphDirection})`);
 }
 
 function updateMorphing(deltaTime, rotationDelta) {
@@ -715,7 +725,7 @@ function updateMorphing(deltaTime, rotationDelta) {
     morphQueued = true;
     isWave2Active = true;
     wave2Timer = -wave2PreDelay;
-    manualMorphDirection = 0; // Auto
+    manualMorphDirection = 0;
   }
 
   if (isWave2Active) {
@@ -733,18 +743,13 @@ function updateMorphing(deltaTime, rotationDelta) {
   if (morphProgress < 1.0) {
     morphProgress += deltaTime / morphDuration;
     if (morphProgress >= 0.5 && morphProgress - (deltaTime / morphDuration) < 0.5) {
-      // Midpoint - update text
       updateTextContent(nextShapeIndex);
     }
     if (morphProgress >= 1.0) {
       morphProgress = 1.0;
       currentShapeIndex = nextShapeIndex;
-      manualMorphDirection = 0; // Reset direction
-      
-      // Update video playback
+      manualMorphDirection = 0;
       updateVideoPlayback();
-      
-      console.log(`✅ MORPH COMPLETE: Now ${shapeNames[currentShapeIndex]}`);
     }
   }
 
@@ -828,7 +833,6 @@ function updateParticles(deltaTime) {
   const freq2 = params.wave2Freq;
   const wave2Str = params.wave2Strength * deltaTime;
 
-
   for (let i = 0; i < count; i++) {
     const idx = i * 3;
     const px = particlePositions[idx];
@@ -853,8 +857,8 @@ function updateParticles(deltaTime) {
     const dx = tx - px;
     const dy = ty - py;
     const dz = tz - pz;
-   const distToTargetSq = dx * dx + dy * dy + dz * dz;
-const isAway = !isMorphing && distToTargetSq > (params.distanceThreshold * params.distanceThreshold);
+    const distToTargetSq = dx * dx + dy * dy + dz * dz;
+    const isAway = !isMorphing && distToTargetSq > (params.distanceThreshold * params.distanceThreshold);
 
     vx += Math.sin(py * freq + t) * Math.cos(pz * freq + t * 1.3) * turbStr;
     vy += Math.sin(pz * freq + t * 1.1) * Math.cos(px * freq + t * 0.9) * turbStr;
@@ -962,9 +966,8 @@ const isAway = !isMorphing && distToTargetSq > (params.distanceThreshold * param
     dummy.updateMatrix();
     particleMesh.setMatrixAt(i, dummy.matrix);
 
-   const color = isMorphing ? inPlaceColor : (isAway ? awayColor : inPlaceColor);
+    const color = isMorphing ? inPlaceColor : (isAway ? awayColor : inPlaceColor);
     
-    // Only update if color actually changed
     if (!particleColors || particleColors[i] !== color) {
       tempColor.setRGB(
         Math.pow(color.r, gamma),
@@ -973,7 +976,6 @@ const isAway = !isMorphing && distToTargetSq > (params.distanceThreshold * param
       );
       particleMesh.setColorAt(i, tempColor);
       
-      // Track this color
       if (!particleColors) particleColors = new Array(count);
       particleColors[i] = color;
     }
@@ -990,10 +992,8 @@ const isAway = !isMorphing && distToTargetSq > (params.distanceThreshold * param
 async function init() {
   await loadParticlePositions();
 
-  // Get existing canvas from DOM
   const canvas = document.getElementById('particle-canvas');
   if (!canvas) {
-    console.error('Canvas #particle-canvas not found!');
     return;
   }
 
@@ -1024,7 +1024,6 @@ async function init() {
 
   await loadModels();
 
-  // Lights
   const light = new THREE.DirectionalLight(0xffffff, 2.5);
   light.position.set(-10, 6, -4);
   light.target.position.set(0.5, 0.5, 0.5);
@@ -1081,8 +1080,8 @@ async function init() {
   setupMouse();
   setupNavButtons();
   setupCTAButton();
+  setupPopup();
   initTextTransitions();
-  
 
   window.addEventListener("resize", () => {
     camera.aspect = window.innerWidth / window.innerHeight;
@@ -1091,7 +1090,6 @@ async function init() {
   });
 
   renderer.setAnimationLoop(render);
-  console.log('✅ Init complete!');
 
   setupIntersectionObserver();
 }
@@ -1122,13 +1120,10 @@ function setupIntersectionObserver() {
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
-        console.log('✅ Particle sim visible - resuming');
         renderer.setAnimationLoop(render);
-        updateVideoPlayback(); // Resume correct video
+        updateVideoPlayback();
       } else {
-        console.log('⏸️ Particle sim hidden - pausing');
         renderer.setAnimationLoop(null);
-        // Pause all videos when off-screen
         monitorVideo.pause();
         phoneVideo.pause();
         vrVideo.pause();
@@ -1141,5 +1136,4 @@ function setupIntersectionObserver() {
   observer.observe(container);
 }
 
-// Start
 init();
