@@ -194,7 +194,7 @@ videoTexture.minFilter = THREE.LinearFilter;
 videoTexture.magFilter = THREE.LinearFilter;
 
 videoTexture.center.set(0.5, 0.5);
-videoTexture.repeat.set(1, 1);  // Change these for video
+videoTexture.repeat.set(1, -1);  // Change these for video
 videoTexture.offset.set(0, 0);
 
 // Start video playing
