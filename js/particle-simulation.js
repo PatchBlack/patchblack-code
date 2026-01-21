@@ -122,7 +122,7 @@ const monitorVideoTexture = new THREE.VideoTexture(monitorVideo);
 monitorVideoTexture.minFilter = THREE.LinearFilter;
 monitorVideoTexture.magFilter = THREE.LinearFilter;
 monitorVideoTexture.center.set(0.5, 0.5);
-monitorVideoTexture.repeat.set(0.75, -1);
+monitorVideoTexture.repeat.set(0.75, -0.9);
 monitorVideoTexture.offset.set(0, 0);
 
 const phoneVideo = document.createElement('video');
@@ -366,7 +366,7 @@ async function loadModels() {
           screenMat.map = monitorVideoTexture;
           screenMat.emissive = new THREE.Color(0xcccccc);
           screenMat.emissiveMap = monitorVideoTexture;
-          screenMat.emissiveIntensity = 5.0;
+          screenMat.emissiveIntensity = 1.0;
           screenMat.roughness = 0.3;
           screenMat.metalness = 0.5;
           screenMat.transparent = true;
@@ -380,7 +380,7 @@ async function loadModels() {
           screenMat.map = phoneVideoTexture;
           screenMat.emissive = new THREE.Color(0xcccccc);
           screenMat.emissiveMap = phoneVideoTexture;
-          screenMat.emissiveIntensity = 5.0;
+          screenMat.emissiveIntensity = 1.0;
           screenMat.roughness = 0.3;
           screenMat.metalness = 0.5;
           screenMat.transparent = true;
@@ -394,39 +394,13 @@ async function loadModels() {
           screenMat.map = vrVideoTexture;
           screenMat.emissive = new THREE.Color(0xcccccc);
           screenMat.emissiveMap = vrVideoTexture;
-          screenMat.emissiveIntensity = 5.0;
+          screenMat.emissiveIntensity = 1.0;
           screenMat.roughness = 0.3;
           screenMat.metalness = 0.5;
           screenMat.transparent = true;
           screenMat.envMap = envMap;
           screenMat.envMapIntensity = 1.5;
           screenMat.needsUpdate = true;
-          
-          screenMat.onBeforeCompile = (shader) => {
-            shader.uniforms.vignetteStrength = { value: 0.8 };
-            shader.uniforms.vignetteSize = { value: 0.6 };
-            
-            shader.fragmentShader = shader.fragmentShader.replace(
-              '#include <map_fragment>',
-              `
-              #include <map_fragment>
-              
-              vec2 uv = vUv;
-              vec2 center = vec2(0.5, 0.5);
-              float dist = distance(uv, center);
-              float vignette = smoothstep(vignetteSize, vignetteSize + 0.5, dist);
-              vignette = 1.0 - (vignette * vignetteStrength);
-              
-              diffuseColor.rgb *= vignette;
-              `
-            );
-            
-            shader.fragmentShader = `
-              uniform float vignetteStrength;
-              uniform float vignetteSize;
-            ` + shader.fragmentShader;
-          };
-          
           child.material = screenMat;
           venetianMaterials.push(screenMat);
         } else {
