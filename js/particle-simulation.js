@@ -198,6 +198,28 @@ function updateButtonState(shapeIndex) {
     }
   }
 }
+
+// Debug: Watch for changes
+const observer = new MutationObserver((mutations) => {
+  mutations.forEach((mutation) => {
+    console.log('🔴 TEXT CHANGED BY:', mutation);
+    console.trace(); // Shows what caused the change
+  });
+});
+
+setTimeout(() => {
+  const mainText = document.getElementById('cursor-text');
+  if (mainText) {
+    observer.observe(mainText, { 
+      childList: true, 
+      characterData: true, 
+      subtree: true 
+    });
+    console.log('👁️ Watching #cursor-text for changes');
+  }
+}, 2000);
+
+
 function initTextTransitions() {
   const heading = document.getElementById('particle-heading');
   const description = document.getElementById('description-text');
