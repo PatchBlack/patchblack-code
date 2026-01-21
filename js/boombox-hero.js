@@ -183,7 +183,7 @@ canvasTexture.offset.set(0, -0.15);
 
 // ===== VIDEO SETUP =====
 const video = document.createElement('video');
-video.src = `${ASSET_BASE}/assets/video/boombox-idle.mp4`;
+video.src = `${ASSET_BASE}/assets/video/boombox-idle-v2.mp4`;
 video.loop = true;
 video.muted = true;
 video.playsInline = true;
