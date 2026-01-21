@@ -16,19 +16,19 @@ const CONTENT = {
     heading: "Product Stories",
     description: "Interactive narratives that turn complex content into clear, engaging digital products.",
     subtext: "Reports · Case studies · Platforms",
-    url: "/product-stories"  // Change to your actual URL, or leave empty "" to show popup
+    url: "/temp-demo"  // Change to your actual URL, or leave empty "" to show popup
   },
   phone: {
     heading: "Living Interfaces",
     description: "Interactions designed to respond, adapt, and guide users through story-led experiences.",
     subtext: "Apps · Web apps · Interactive systems",
-    url: "/living-interfaces"  // Change to your actual URL, or leave empty "" to show popup
+    url: ""  // Change to your actual URL, or leave empty "" to show popup
   },
   vr: {
     heading: "Immersive Narratives",
     description: "Stories extended into spatial and immersive environments that invite exploration.",
     subtext: "AR · VR · Spatial experiences",
-    url: "/immersive-narratives"  // Change to your actual URL, or leave empty "" to show popup
+    url: ""  // Change to your actual URL, or leave empty "" to show popup
   }
 };
 
