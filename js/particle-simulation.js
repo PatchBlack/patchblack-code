@@ -122,7 +122,7 @@ const monitorVideoTexture = new THREE.VideoTexture(monitorVideo);
 monitorVideoTexture.minFilter = THREE.LinearFilter;
 monitorVideoTexture.magFilter = THREE.LinearFilter;
 monitorVideoTexture.center.set(0.5, 0.5);
-monitorVideoTexture.repeat.set(0.75, -0.9);
+monitorVideoTexture.repeat.set(-0.75, -0.9);
 monitorVideoTexture.offset.set(0, 0);
 
 const phoneVideo = document.createElement('video');
@@ -136,7 +136,7 @@ const phoneVideoTexture = new THREE.VideoTexture(phoneVideo);
 phoneVideoTexture.minFilter = THREE.LinearFilter;
 phoneVideoTexture.magFilter = THREE.LinearFilter;
 phoneVideoTexture.center.set(0.5, 0.5);
-phoneVideoTexture.repeat.set(0.75, -0.75);
+phoneVideoTexture.repeat.set(-0.75, -0.75);
 phoneVideoTexture.offset.set(0, 0);
 
 const vrVideo = document.createElement('video');
@@ -329,9 +329,9 @@ async function loadModels() {
   envMap.mapping = THREE.EquirectangularReflectionMapping;
 
   const [monitorGltf, mobileGltf, vrGltf] = await Promise.all([
-    modelLoader.loadAsync(`${ASSET_BASE}/assets/models/monitor-v3.glb`),
-    modelLoader.loadAsync(`${ASSET_BASE}/assets/models/mobile-v3.glb`),
-    modelLoader.loadAsync(`${ASSET_BASE}/assets/models/vr-glass-v3.glb`),
+    modelLoader.loadAsync(`${ASSET_BASE}/assets/models/monitor-v2.glb`),
+    modelLoader.loadAsync(`${ASSET_BASE}/assets/models/mobile-v2.glb`),
+    modelLoader.loadAsync(`${ASSET_BASE}/assets/models/vr-glass-v2.glb`),
   ]);
 
   const monitorContainer = new THREE.Group();
