@@ -136,7 +136,7 @@ const phoneVideoTexture = new THREE.VideoTexture(phoneVideo);
 phoneVideoTexture.minFilter = THREE.LinearFilter;
 phoneVideoTexture.magFilter = THREE.LinearFilter;
 phoneVideoTexture.center.set(0.5, 0.5);
-phoneVideoTexture.repeat.set(-0.75, 0.75);
+phoneVideoTexture.repeat.set(0.75, 0.75);
 phoneVideoTexture.offset.set(0, 0);
 
 const vrVideo = document.createElement('video');
@@ -330,7 +330,7 @@ async function loadModels() {
           screenMat.map = monitorVideoTexture;
           screenMat.emissive = new THREE.Color(0xcccccc);
           screenMat.emissiveMap = monitorVideoTexture;
-          screenMat.emissiveIntensity = 5.0;
+          screenMat.emissiveIntensity = 2.0;
           screenMat.roughness = 0.3;
           screenMat.metalness = 0.5;
           screenMat.transparent = true;
@@ -344,7 +344,7 @@ async function loadModels() {
           screenMat.map = phoneVideoTexture;
           screenMat.emissive = new THREE.Color(0xcccccc);
           screenMat.emissiveMap = phoneVideoTexture;
-          screenMat.emissiveIntensity = 5.0;
+          screenMat.emissiveIntensity = 2.0;
           screenMat.roughness = 0.3;
           screenMat.metalness = 0.5;
           screenMat.transparent = true;
@@ -358,7 +358,7 @@ async function loadModels() {
           screenMat.map = vrVideoTexture;
           screenMat.emissive = new THREE.Color(0xcccccc);
           screenMat.emissiveMap = vrVideoTexture;
-          screenMat.emissiveIntensity = 5.0;
+          screenMat.emissiveIntensity = 2.0;
           screenMat.roughness = 0.3;
           screenMat.metalness = 0.5;
           screenMat.transparent = true;
