@@ -229,11 +229,8 @@ function setupCTAButton() {
   console.log('🔍 Setting up CTA button...');
   
   const ctaWrapper = document.getElementById('cta-wrapper');
-  const buttonText = document.getElementById('cursor-text');
-  const allGhostTexts = document.querySelectorAll('.ghost-text');
   
   console.log('🔍 CTA wrapper found:', ctaWrapper);
-  console.log('🔍 Button text found:', buttonText);
   
   if (ctaWrapper) {
     ctaWrapper.addEventListener('click', (e) => {
@@ -244,21 +241,40 @@ function setupCTAButton() {
       
       console.log('🔍 Current shape:', key);
       console.log('🔍 URL:', url);
+      console.log('🔍 URL check - is empty?', (!url || url === ''));
       
       if (!url || url === '') {
-        console.log('⚠️ No URL - ACCESS DENIED');
+        console.log('⚠️ No URL - ACCESS DENIED state activated');
         
-        // Change text to ACCESS DENIED
-        if (buttonText) buttonText.textContent = 'ACCESS DENIED';
-        allGhostTexts.forEach(ghost => ghost.textContent = 'ACCESS DENIED');
+        // Get text elements
+        const buttonText = document.getElementById('cursor-text');
+        const ghostTexts = document.querySelectorAll('.ghost-text');
+        
+        console.log('🔍 Main button text element:', buttonText);
+        console.log('🔍 Ghost text elements:', ghostTexts);
+        
+        // Change all text to ACCESS DENIED
+        if (buttonText) {
+          console.log('✅ Changing main text to ACCESS DENIED');
+          buttonText.textContent = 'ACCESS DENIED';
+        } else {
+          console.error('❌ Main button text not found!');
+        }
+        
+        ghostTexts.forEach((ghost, index) => {
+          console.log(`✅ Changing ghost text ${index} to ACCESS DENIED`);
+          ghost.textContent = 'ACCESS DENIED';
+        });
         
         // Add green color and shake
+        console.log('✅ Adding access-denied class');
         ctaWrapper.classList.add('access-denied');
         
         // Reset after 2 seconds
         setTimeout(() => {
+          console.log('🔄 Resetting button to VIEW DEMO');
           if (buttonText) buttonText.textContent = 'VIEW DEMO';
-          allGhostTexts.forEach(ghost => ghost.textContent = 'VIEW DEMO');
+          ghostTexts.forEach(ghost => ghost.textContent = 'VIEW DEMO');
           ctaWrapper.classList.remove('access-denied');
         }, 2000);
         
@@ -268,6 +284,8 @@ function setupCTAButton() {
       }
     }, true);
     console.log('✅ CTA wrapper listener attached');
+  } else {
+    console.error('❌ CTA wrapper not found!');
   }
 }
 
