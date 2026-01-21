@@ -302,9 +302,9 @@ async function loadModels() {
   envMap.mapping = THREE.EquirectangularReflectionMapping;
 
 const [monitorGltf, mobileGltf, vrGltf] = await Promise.all([
-  modelLoader.loadAsync(`https://cdn.jsdelivr.net/gh/PatchBlack/patchblack-code@cc0d5e703e4dda41862e25d9352b47c503f73b36/assets/models/monitor.glb`),
-  modelLoader.loadAsync(`https://cdn.jsdelivr.net/gh/PatchBlack/patchblack-code@cc0d5e703e4dda41862e25d9352b47c503f73b36/assets/models/mobile.glb`),
-  modelLoader.loadAsync(`https://cdn.jsdelivr.net/gh/PatchBlack/patchblack-code@cc0d5e703e4dda41862e25d9352b47c503f73b36/assets/models/vr-glass.glb`),
+  modelLoader.loadAsync(`${ASSET_BASE}/assets/models/monitor-v2.glb`),
+   modelLoader.loadAsync(`${ASSET_BASE}/assets/models/mobile-v2.glb`),
+   modelLoader.loadAsync(`${ASSET_BASE}/assets/models/vr-glass-v2.glb`),
 ]);
 
   const monitorContainer = new THREE.Group();
