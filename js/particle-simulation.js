@@ -229,6 +229,11 @@ function setupCTAButton() {
   console.log('🔍 Setting up CTA button...');
   
   const ctaWrapper = document.getElementById('cta-wrapper');
+  const mainButton = document.querySelector('.cursor-button-main');
+  const mainText = document.getElementById('cursor-text');
+  
+  console.log('🔍 Main button:', mainButton);
+  console.log('🔍 Main text span:', mainText);
   
   if (ctaWrapper) {
     ctaWrapper.addEventListener('click', (e) => {
@@ -237,37 +242,27 @@ function setupCTAButton() {
       const key = SHAPE_KEYS[currentShapeIndex];
       const url = CONTENT[key].url;
       
-      console.log('🔍 Current shape:', key);
       console.log('🔍 URL:', url);
       
       if (!url || url === '') {
-        console.log('⚠️ No URL - ACCESS DENIED');
+        console.log('⚠️ ACCESS DENIED');
         
-        // Get ALL button elements
-        const mainButton = ctaWrapper.querySelector('.cursor-button-main');
-        const ghost1 = ctaWrapper.querySelector('.cursor-button-ghost1');
-        const ghost2 = ctaWrapper.querySelector('.cursor-button-ghost2');
-        const mainText = document.getElementById('cursor-text');
-        const ghostTexts = ctaWrapper.querySelectorAll('.ghost-text');
+        // ONLY change main button text
+        if (mainText) {
+          mainText.textContent = 'ACCESS DENIED';
+          console.log('✅ Main text changed to:', mainText.textContent);
+        }
         
-        // Change text
-        if (mainText) mainText.textContent = 'ACCESS DENIED';
-        ghostTexts.forEach(ghost => ghost.textContent = 'ACCESS DENIED');
-        
-        // Add class for animation
-        if (mainButton) mainButton.classList.add('access-denied');
-        if (ghost1) ghost1.classList.add('access-denied');
-        if (ghost2) ghost2.classList.add('access-denied');
-        
-        console.log('✅ ACCESS DENIED applied');
+        // Add class to main button only
+        if (mainButton) {
+          mainButton.classList.add('access-denied');
+          console.log('✅ Class added to main button');
+        }
         
         // Reset after 2 seconds
         setTimeout(() => {
           if (mainText) mainText.textContent = 'VIEW DEMO';
-          ghostTexts.forEach(ghost => ghost.textContent = 'VIEW DEMO');
           if (mainButton) mainButton.classList.remove('access-denied');
-          if (ghost1) ghost1.classList.remove('access-denied');
-          if (ghost2) ghost2.classList.remove('access-denied');
           console.log('🔄 Reset complete');
         }, 2000);
         
@@ -276,7 +271,6 @@ function setupCTAButton() {
         window.location.href = url;
       }
     }, true);
-    console.log('✅ CTA wrapper listener attached');
   }
 }
 
