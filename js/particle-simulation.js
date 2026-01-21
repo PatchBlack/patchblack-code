@@ -266,8 +266,12 @@ function setupNavButtons() {
 function setupCTAButton() {
   console.log('🔍 Setting up CTA button...');
   
-  const ctaWrapper = document.getElementById('cta-wrapper');
-  const mainButton = document.querySelector('.cursor-button-main');
+  const ctaWrapper = document.getElementById('particle-cta-wrapper');
+  // Select button INSIDE particle-cta-wrapper only
+  const mainButton = ctaWrapper ? ctaWrapper.querySelector('.cursor-button-main') : null;
+  
+  console.log('🔍 CTA wrapper:', ctaWrapper);
+  console.log('🔍 Main button:', mainButton);
   
   if (ctaWrapper) {
     ctaWrapper.addEventListener('click', (e) => {
@@ -284,11 +288,15 @@ function setupCTAButton() {
         // Just animate - text is already "ACCESS DENIED"
         if (mainButton) {
           mainButton.classList.add('access-denied');
+          console.log('✅ Added access-denied class');
           
           // Remove animation class after it completes
           setTimeout(() => {
             mainButton.classList.remove('access-denied');
-          }, 500); // 0.5s = animation duration
+            console.log('✅ Removed access-denied class');
+          }, 500);
+        } else {
+          console.error('❌ Main button not found!');
         }
         
       } else {
