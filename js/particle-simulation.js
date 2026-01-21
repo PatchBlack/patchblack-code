@@ -302,9 +302,9 @@ async function loadModels() {
   envMap.mapping = THREE.EquirectangularReflectionMapping;
 
 const [monitorGltf, mobileGltf, vrGltf] = await Promise.all([
-  modelLoader.loadAsync(`https://cdn.jsdelivr.net/gh/PatchBlack/patchblack-code@d97e4ea90cdca7d5a772e8b8048aa64480f05190/assets/models/monitor.glb`),
-  modelLoader.loadAsync(`https://cdn.jsdelivr.net/gh/PatchBlack/patchblack-code@d97e4ea90cdca7d5a772e8b8048aa64480f05190/assets/models/mobile.glb`),
-  modelLoader.loadAsync(`https://cdn.jsdelivr.net/gh/PatchBlack/patchblack-code@d97e4ea90cdca7d5a772e8b8048aa64480f05190/assets/models/vr-glass.glb`),
+  modelLoader.loadAsync(`https://cdn.jsdelivr.net/gh/PatchBlack/patchblack-code@cc0d5e703e4dda41862e25d9352b47c503f73b36/assets/models/monitor.glb`),
+  modelLoader.loadAsync(`https://cdn.jsdelivr.net/gh/PatchBlack/patchblack-code@cc0d5e703e4dda41862e25d9352b47c503f73b36/assets/models/mobile.glb`),
+  modelLoader.loadAsync(`https://cdn.jsdelivr.net/gh/PatchBlack/patchblack-code@cc0d5e703e4dda41862e25d9352b47c503f73b36/assets/models/vr-glass.glb`),
 ]);
 
   const monitorContainer = new THREE.Group();
@@ -341,46 +341,49 @@ const [monitorGltf, mobileGltf, vrGltf] = await Promise.all([
       // Apply video textures to screen meshes
       if (child.name === 'monitor_screen' && index === 0) {
         console.log('  ✅ Applying MONITOR video texture');
-        const screenMat = new THREE.MeshStandardMaterial({
-          map: monitorVideoTexture,
-          emissive: new THREE.Color(0xffffff),
-          emissiveMap: monitorVideoTexture,
-          emissiveIntensity: 8.0,
-          roughness: 0.3,
-          metalness: 0.5,
-          envMap: envMap,
-          envMapIntensity: 1.5
-        });
-        child.material = screenMat;
-        venetianMaterials.push(screenMat);
+        const screenMat = child.material.clone();
+  screenMat.map = monitorVideoTexture;
+  screenMat.emissive = new THREE.Color(0xffffff);
+  screenMat.emissiveMap = monitorVideoTexture;
+  screenMat.emissiveIntensity = 8.0;
+  screenMat.roughness = 0.3;
+  screenMat.metalness = 0.5;
+  screenMat.transparent = true;
+  screenMat.envMap = envMap;
+  screenMat.envMapIntensity = 1.5;
+  screenMat.needsUpdate = true;
+  child.material = screenMat;
+  venetianMaterials.push(screenMat);
       } else if (child.name === 'phone_screen' && index === 1) {
         console.log('  ✅ Applying PHONE video texture');
-        const screenMat = new THREE.MeshStandardMaterial({
-          map: phoneVideoTexture,
-          emissive: new THREE.Color(0xffffff),
-          emissiveMap: phoneVideoTexture,
-          emissiveIntensity: 8.0,
-          roughness: 0.3,
-          metalness: 0.5,
-          envMap: envMap,
-          envMapIntensity: 1.5
-        });
-        child.material = screenMat;
-        venetianMaterials.push(screenMat);
+       const screenMat = child.material.clone();
+  screenMat.map = phoneVideoTexture;
+  screenMat.emissive = new THREE.Color(0xffffff);
+  screenMat.emissiveMap = phoneVideoTexture;
+  screenMat.emissiveIntensity = 8.0;
+  screenMat.roughness = 0.3;
+  screenMat.metalness = 0.5;
+  screenMat.transparent = true;
+  screenMat.envMap = envMap;
+  screenMat.envMapIntensity = 1.5;
+  screenMat.needsUpdate = true;
+  child.material = screenMat;
+  venetianMaterials.push(screenMat);
       } else if (child.name === 'vr_screen' && index === 2) {
         console.log('  ✅ Applying VR video texture');
-        const screenMat = new THREE.MeshStandardMaterial({
-          map: vrVideoTexture,
-          emissive: new THREE.Color(0xffffff),
-          emissiveMap: vrVideoTexture,
-          emissiveIntensity: 8.0,
-          roughness: 0.3,
-          metalness: 0.5,
-          envMap: envMap,
-          envMapIntensity: 1.5
-        });
-        child.material = screenMat;
-        venetianMaterials.push(screenMat);
+        const screenMat = child.material.clone();
+  screenMat.map = vrVideoTexture;
+  screenMat.emissive = new THREE.Color(0xffffff);
+  screenMat.emissiveMap = vrVideoTexture;
+  screenMat.emissiveIntensity = 8.0;
+  screenMat.roughness = 0.3;
+  screenMat.metalness = 0.5;
+  screenMat.transparent = true;
+  screenMat.envMap = envMap;
+  screenMat.envMapIntensity = 1.5;
+  screenMat.needsUpdate = true;
+  child.material = screenMat;
+  venetianMaterials.push(screenMat);
       } else {
         // Apply venetian material to other meshes
         const newMat = createVenetianMaterial(child.material, index, envMap);
