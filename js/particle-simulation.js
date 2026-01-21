@@ -22,13 +22,13 @@ const CONTENT = {
     heading: "Living Interfaces",
     description: "Interactions designed to respond, adapt, and guide users through story-led experiences.",
     subtext: "Apps · Web apps · Interactive systems",
-    url: ""  // Change to your actual URL, or leave empty "" to show popup
+    url: // Change to your actual URL, or leave empty "" to show popup
   },
   vr: {
     heading: "Immersive Narratives",
     description: "Stories extended into spatial and immersive environments that invite exploration.",
     subtext: "AR · VR · Spatial experiences",
-    url: ""  // Change to your actual URL, or leave empty "" to show popup
+    url: // Change to your actual URL, or leave empty "" to show popup
   }
 };
 
@@ -126,7 +126,7 @@ monitorVideoTexture.repeat.set(0.75, -0.9);
 monitorVideoTexture.offset.set(0, 0);
 
 const phoneVideo = document.createElement('video');
-phoneVideo.src = `${ASSET_BASE}/assets/video/particleSim-idle-01.mp4`;
+phoneVideo.src = `${ASSET_BASE}/assets/video/particleSim-idle.mp4`;
 phoneVideo.loop = true;
 phoneVideo.muted = true;
 phoneVideo.playsInline = true;
@@ -366,7 +366,7 @@ async function loadModels() {
           screenMat.map = monitorVideoTexture;
           screenMat.emissive = new THREE.Color(0xcccccc);
           screenMat.emissiveMap = monitorVideoTexture;
-          screenMat.emissiveIntensity = 5.0;
+          screenMat.emissiveIntensity = 1.0;
           screenMat.roughness = 0.3;
           screenMat.metalness = 0.5;
           screenMat.transparent = true;
@@ -380,7 +380,7 @@ async function loadModels() {
           screenMat.map = phoneVideoTexture;
           screenMat.emissive = new THREE.Color(0xcccccc);
           screenMat.emissiveMap = phoneVideoTexture;
-          screenMat.emissiveIntensity = 5.0;
+          screenMat.emissiveIntensity = 1.0;
           screenMat.roughness = 0.3;
           screenMat.metalness = 0.5;
           screenMat.transparent = true;
@@ -394,7 +394,7 @@ async function loadModels() {
           screenMat.map = vrVideoTexture;
           screenMat.emissive = new THREE.Color(0xcccccc);
           screenMat.emissiveMap = vrVideoTexture;
-          screenMat.emissiveIntensity = 5.0;
+          screenMat.emissiveIntensity = 1.0;
           screenMat.roughness = 0.3;
           screenMat.metalness = 0.5;
           screenMat.transparent = true;
