@@ -254,29 +254,30 @@ function setupCTAButton() {
         console.log('🔍 Ghost text elements:', ghostTexts);
         
         // Change all text to ACCESS DENIED
-        if (buttonText) {
-          console.log('✅ Changing main text to ACCESS DENIED');
-          buttonText.textContent = 'ACCESS DENIED';
-        } else {
-          console.error('❌ Main button text not found!');
-        }
-        
-        ghostTexts.forEach((ghost, index) => {
-          console.log(`✅ Changing ghost text ${index} to ACCESS DENIED`);
-          ghost.textContent = 'ACCESS DENIED';
-        });
+       // Change all text to ACCESS DENIED (using innerHTML for cleaner output)
+if (buttonText) {
+  console.log('✅ Changing main text to ACCESS DENIED');
+  buttonText.innerHTML = 'ACCESS DENIED';
+  console.log('🔍 After change, text is:', buttonText.innerHTML);
+}
+
+ghostTexts.forEach((ghost, index) => {
+  console.log(`✅ Changing ghost text ${index} to ACCESS DENIED`);
+  ghost.innerHTML = 'ACCESS DENIED';
+});
         
         // Add green color and shake
         console.log('✅ Adding access-denied class');
         ctaWrapper.classList.add('access-denied');
         
         // Reset after 2 seconds
-        setTimeout(() => {
-          console.log('🔄 Resetting button to VIEW DEMO');
-          if (buttonText) buttonText.textContent = 'VIEW DEMO';
-          ghostTexts.forEach(ghost => ghost.textContent = 'VIEW DEMO');
-          ctaWrapper.classList.remove('access-denied');
-        }, 2000);
+        // Reset after 2 seconds
+setTimeout(() => {
+  console.log('🔄 Resetting button to VIEW DEMO');
+  if (buttonText) buttonText.innerHTML = 'VIEW DEMO';
+  ghostTexts.forEach(ghost => ghost.innerHTML = 'VIEW DEMO');
+  ctaWrapper.classList.remove('access-denied');
+}, 2000);
         
       } else {
         console.log('✅ Navigating to:', url);
