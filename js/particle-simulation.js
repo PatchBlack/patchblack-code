@@ -223,28 +223,26 @@ function hidePopup() {
 }
 
 function setupPopup() {
+  console.log('🎯 setupPopup() called');
   const closeBtn = document.getElementById('popup-close');
-  const overlay = document.getElementById('popup-overlay');
+  
+  console.log('🔍 Close button:', closeBtn);
   
   if (closeBtn) {
     closeBtn.addEventListener('click', hidePopup);
-  }
-  
-  if (overlay) {
-    overlay.addEventListener('click', (e) => {
-      if (e.target === overlay) {
-        hidePopup();
-      }
-    });
+    console.log('✅ Close button listener attached');
+  } else {
+    console.error('❌ Close button not found');
   }
   
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
+      console.log('⌨️ ESC key pressed, closing popup');
       hidePopup();
     }
   });
+  console.log('✅ ESC key listener attached');
 }
-
 // ==========================================
 // BUTTON NAVIGATION
 // ==========================================
