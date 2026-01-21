@@ -188,17 +188,26 @@ function updateButtonState(shapeIndex) {
   const url = CONTENT[key].url;
   const mainText = document.getElementById('cursor-text');
   
+  console.log('🔍 updateButtonState called');
+  console.log('🔍 mainText element:', mainText);
+  console.log('🔍 mainText current value:', mainText ? mainText.textContent : 'NOT FOUND');
+  
   if (mainText) {
     if (!url || url === '') {
+      console.log('🔄 BEFORE change:', mainText.textContent);
       mainText.textContent = 'ACCESS DENIED';
+      console.log('🔄 AFTER change:', mainText.textContent);
       console.log(`🚫 Button set to ACCESS DENIED for ${key}`);
     } else {
+      console.log('🔄 BEFORE change:', mainText.textContent);
       mainText.textContent = 'VIEW DEMO';
+      console.log('🔄 AFTER change:', mainText.textContent);
       console.log(`✅ Button set to VIEW DEMO for ${key}`);
     }
+  } else {
+    console.error('❌ #cursor-text element NOT FOUND!');
   }
 }
-
 function initTextTransitions() {
   const heading = document.getElementById('particle-heading');
   const description = document.getElementById('description-text');
