@@ -112,7 +112,7 @@ let particleColors = null;
 // ==========================================
 
 const monitorVideo = document.createElement('video');
-monitorVideo.src = `${ASSET_BASE}/assets/video/particleSim-idle.mp4`;
+monitorVideo.src = `${ASSET_BASE}/assets/video/particleSim-idle-v1.mp4`;
 monitorVideo.loop = true;
 monitorVideo.muted = true;
 monitorVideo.playsInline = true;
@@ -126,7 +126,7 @@ monitorVideoTexture.repeat.set(-0.75, -0.9);
 monitorVideoTexture.offset.set(0, 0);
 
 const phoneVideo = document.createElement('video');
-phoneVideo.src = `${ASSET_BASE}/assets/video/particleSim-idle.mp4`;
+phoneVideo.src = `${ASSET_BASE}/assets/video/particleSim-idle-v1.mp4`;
 phoneVideo.loop = true;
 phoneVideo.muted = true;
 phoneVideo.playsInline = true;
@@ -136,11 +136,11 @@ const phoneVideoTexture = new THREE.VideoTexture(phoneVideo);
 phoneVideoTexture.minFilter = THREE.LinearFilter;
 phoneVideoTexture.magFilter = THREE.LinearFilter;
 phoneVideoTexture.center.set(0.5, 0.5);
-phoneVideoTexture.repeat.set(-0.75, -0.75);
+phoneVideoTexture.repeat.set(-0.75, 0.75);
 phoneVideoTexture.offset.set(0, 0);
 
 const vrVideo = document.createElement('video');
-vrVideo.src = `${ASSET_BASE}/assets/video/particleSim-idle.mp4`;
+vrVideo.src = `${ASSET_BASE}/assets/video/particleSim-idle-v1.mp4`;
 vrVideo.loop = true;
 vrVideo.muted = true;
 vrVideo.playsInline = true;
@@ -194,55 +194,6 @@ function initTextTransitions() {
   
   updateTextContent(0);
 }
-
-// ==========================================
-// POPUP FUNCTIONALITY
-// ==========================================
-
-function showPopup() {
-  const popup = document.getElementById('chapter-popup');
-  const overlay = document.getElementById('popup-overlay');
-  
-  if (popup && overlay) {
-    overlay.style.display = 'flex';
-    overlay.offsetHeight;
-    overlay.classList.add('show');
-  }
-}
-
-function hidePopup() {
-  const popup = document.getElementById('chapter-popup');
-  const overlay = document.getElementById('popup-overlay');
-  
-  if (popup && overlay) {
-    overlay.classList.remove('show');
-    setTimeout(() => {
-      overlay.style.display = 'none';
-    }, 300);
-  }
-}
-
-function setupPopup() {
-  console.log('🎯 setupPopup() called');
-  const closeBtn = document.getElementById('popup-close');
-  
-  console.log('🔍 Close button:', closeBtn);
-  
-  if (closeBtn) {
-    closeBtn.addEventListener('click', hidePopup);
-    console.log('✅ Close button listener attached');
-  } else {
-    console.error('❌ Close button not found');
-  }
-  
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      console.log('⌨️ ESC key pressed, closing popup');
-      hidePopup();
-    }
-  });
-  console.log('✅ ESC key listener attached');
-}
 // ==========================================
 // BUTTON NAVIGATION
 // ==========================================
@@ -278,13 +229,15 @@ function setupCTAButton() {
   console.log('🔍 Setting up CTA button...');
   
   const ctaWrapper = document.getElementById('cta-wrapper');
+  const buttonText = document.getElementById('cursor-text');
+  const allGhostTexts = document.querySelectorAll('.ghost-text');
+  
   console.log('🔍 CTA wrapper found:', ctaWrapper);
+  console.log('🔍 Button text found:', buttonText);
   
   if (ctaWrapper) {
     ctaWrapper.addEventListener('click', (e) => {
       console.log('🖱️ CTA wrapper clicked!');
-      console.log('🔍 Click target:', e.target);
-      console.log('🔍 Current target:', e.currentTarget);
       
       const key = SHAPE_KEYS[currentShapeIndex];
       const url = CONTENT[key].url;
@@ -292,10 +245,23 @@ function setupCTAButton() {
       console.log('🔍 Current shape:', key);
       console.log('🔍 URL:', url);
       
-      // Only show popup if URL is truly empty/undefined
       if (!url || url === '') {
-        console.log('⚠️ No URL - showing popup');
-        showPopup();
+        console.log('⚠️ No URL - ACCESS DENIED');
+        
+        // Change text to ACCESS DENIED
+        if (buttonText) buttonText.textContent = 'ACCESS DENIED';
+        allGhostTexts.forEach(ghost => ghost.textContent = 'ACCESS DENIED');
+        
+        // Add green color and shake
+        ctaWrapper.classList.add('access-denied');
+        
+        // Reset after 2 seconds
+        setTimeout(() => {
+          if (buttonText) buttonText.textContent = 'VIEW DEMO';
+          allGhostTexts.forEach(ghost => ghost.textContent = 'VIEW DEMO');
+          ctaWrapper.classList.remove('access-denied');
+        }, 2000);
+        
       } else {
         console.log('✅ Navigating to:', url);
         window.location.href = url;
@@ -327,9 +293,9 @@ async function loadModels() {
   envMap.mapping = THREE.EquirectangularReflectionMapping;
 
   const [monitorGltf, mobileGltf, vrGltf] = await Promise.all([
-    modelLoader.loadAsync(`${ASSET_BASE}/assets/models/monitor-v2.glb`),
-    modelLoader.loadAsync(`${ASSET_BASE}/assets/models/mobile-v2.glb`),
-    modelLoader.loadAsync(`${ASSET_BASE}/assets/models/vr-glass-v2.glb`),
+    modelLoader.loadAsync(`${ASSET_BASE}/assets/models/monitor-v4.glb`),
+    modelLoader.loadAsync(`${ASSET_BASE}/assets/models/mobile-v4.glb`),
+    modelLoader.loadAsync(`${ASSET_BASE}/assets/models/vr-glass-v4.glb`),
   ]);
 
   const monitorContainer = new THREE.Group();
@@ -364,7 +330,7 @@ async function loadModels() {
           screenMat.map = monitorVideoTexture;
           screenMat.emissive = new THREE.Color(0xcccccc);
           screenMat.emissiveMap = monitorVideoTexture;
-          screenMat.emissiveIntensity = 1.0;
+          screenMat.emissiveIntensity = 5.0;
           screenMat.roughness = 0.3;
           screenMat.metalness = 0.5;
           screenMat.transparent = true;
@@ -378,7 +344,7 @@ async function loadModels() {
           screenMat.map = phoneVideoTexture;
           screenMat.emissive = new THREE.Color(0xcccccc);
           screenMat.emissiveMap = phoneVideoTexture;
-          screenMat.emissiveIntensity = 1.0;
+          screenMat.emissiveIntensity = 5.0;
           screenMat.roughness = 0.3;
           screenMat.metalness = 0.5;
           screenMat.transparent = true;
@@ -392,7 +358,7 @@ async function loadModels() {
           screenMat.map = vrVideoTexture;
           screenMat.emissive = new THREE.Color(0xcccccc);
           screenMat.emissiveMap = vrVideoTexture;
-          screenMat.emissiveIntensity = 1.0;
+          screenMat.emissiveIntensity = 5.0;
           screenMat.roughness = 0.3;
           screenMat.metalness = 0.5;
           screenMat.transparent = true;
@@ -1066,7 +1032,6 @@ async function init() {
   setupMouse();
   setupNavButtons();
   setupCTAButton();
-  setupPopup();
   initTextTransitions();
 
   window.addEventListener("resize", () => {
