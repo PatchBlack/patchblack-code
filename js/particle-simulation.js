@@ -22,13 +22,13 @@ const CONTENT = {
     heading: "Living Interfaces",
     description: "Interactions designed to respond, adapt, and guide users through story-led experiences.",
     subtext: "Apps · Web apps · Interactive systems",
-    url: // Change to your actual URL, or leave empty "" to show popup
+    url: ""// Change to your actual URL, or leave empty "" to show popup
   },
   vr: {
     heading: "Immersive Narratives",
     description: "Stories extended into spatial and immersive environments that invite exploration.",
     subtext: "AR · VR · Spatial experiences",
-    url: // Change to your actual URL, or leave empty "" to show popup
+    url: ""// Change to your actual URL, or leave empty "" to show popup
   }
 };
 
