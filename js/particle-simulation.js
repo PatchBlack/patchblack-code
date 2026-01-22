@@ -802,11 +802,18 @@ function getTargetPositions(idx) {
   return monkeyTargetPositions;
 }
 
+// ==========================================
+// OPTIMIZATION 1: DIRECT MATRIX UPDATE
+// ==========================================
+
 function updateParticles(deltaTime) {
   const count = params.particleCount;
   const currentTargets = getTargetPositions(currentShapeIndex);
   const nextTargets = getTargetPositions(nextShapeIndex);
   const isMorphing = morphProgress < 1.0;
+
+  // Grab the raw array of matrix data (The "Fast Lane")
+  const matrixArray = particleMesh.instanceMatrix.array;
 
   // OPTIMIZATION: Reuse vector instead of creating new one
   mouseDelta.copy(mouseCoord).sub(prevMouseCoord);
@@ -892,7 +899,6 @@ function updateParticles(deltaTime) {
       vz += Math.sin(px * freq2 + t5) * Math.cos(py * freq2 + t6) * strength;
     }
 
-    // OPTIMIZATION: Skip mouse force calculation if no force
     if (hasMouseForce && pz >= params.mouseDepthMin && pz <= params.mouseDepthMax) {
       const dmx = px - mouseRayOrigin.x;
       const dmy = py - mouseRayOrigin.y;
@@ -902,7 +908,6 @@ function updateParticles(deltaTime) {
       const cry = mouseRayDirection.z * dmx - mouseRayDirection.x * dmz;
       const crz = mouseRayDirection.x * dmy - mouseRayDirection.y * dmx;
       
-      // OPTIMIZATION: Use squared distance first, only sqrt if needed
       const distSq = crx * crx + cry * cry + crz * crz;
       const rangeThreshold = 1.0 / (params.mouseRange * params.mouseRange);
       
@@ -984,9 +989,16 @@ function updateParticles(deltaTime) {
     particleVelocities[idx + 1] = vy;
     particleVelocities[idx + 2] = vz;
 
-    dummy.position.set(nx - 0.5, ny - 0.5, nz - 0.5);
-    dummy.updateMatrix();
-    particleMesh.setMatrixAt(i, dummy.matrix);
+    // --- START OF CHANGE ---
+    // REMOVED: dummy.position.set(...) and dummy.updateMatrix()
+    
+    // ADDED: Direct Array Update
+    // We update indices 12, 13, 14 of the 4x4 matrix (the translation columns)
+    const offset = i * 16;
+    matrixArray[offset + 12] = nx - 0.5;
+    matrixArray[offset + 13] = ny - 0.5;
+    matrixArray[offset + 14] = nz - 0.5;
+    // --- END OF CHANGE ---
 
     const color = isMorphing ? inPlaceColor : (isAway ? awayColor : inPlaceColor);
     
