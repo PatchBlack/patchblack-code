@@ -600,7 +600,7 @@ function setupParticles() {
   particleMesh = new THREE.InstancedMesh(geometry, material, count);
   particleMesh.position.set(0.5, 0.5, 0.5);
   particleMesh.frustumCulled = false;
-  particleMesh.castShadow = true;
+  particleMesh.castShadow = false;
   particleMesh.receiveShadow = true;
   particleMesh.layers.set(0);
 
