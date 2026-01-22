@@ -1129,6 +1129,7 @@ async function init() {
   renderer.setAnimationLoop(render);
 
   setupIntersectionObserver();
+  setupLifecycle();
 }
 
 // ==========================================
@@ -1171,6 +1172,89 @@ function setupIntersectionObserver() {
   });
   
   observer.observe(container);
+}
+
+// ==========================================
+// OPTIMIZATION 5 & 6: LIFECYCLE & CLEANUP
+// ==========================================
+
+function setupLifecycle() {
+  // --- OPTIMIZATION 5: BATTERY SAVER ---
+  // If the user switches tabs, stop the heavy loop immediately.
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      renderer.setAnimationLoop(null);
+      monitorVideo.pause();
+      phoneVideo.pause();
+      vrVideo.pause();
+    } else {
+      // When tab comes back, resume only if the renderer exists
+      if (renderer) {
+        renderer.setAnimationLoop(render);
+        updateVideoPlayback();
+      }
+    }
+  });
+
+  // --- OPTIMIZATION 6: MEMORY CLEANUP ---
+  // Call window.disposeParticleSim() if you navigate away (in React/Vue/Next.js)
+  window.disposeParticleSim = function() {
+    console.log("♻️ Cleaning up Particle Sim...");
+
+    // 1. Stop the loop
+    renderer.setAnimationLoop(null);
+
+    // 2. Dispose of Materials and Geometry
+    scene.traverse((object) => {
+      if (object.isMesh) {
+        if (object.geometry) object.geometry.dispose();
+
+        if (object.material) {
+          if (Array.isArray(object.material)) {
+            object.material.forEach((m) => cleanMaterial(m));
+          } else {
+            cleanMaterial(object.material);
+          }
+        }
+      }
+    });
+
+    // 3. Dispose Video Textures
+    if (monitorVideoTexture) monitorVideoTexture.dispose();
+    if (phoneVideoTexture) phoneVideoTexture.dispose();
+    if (vrVideoTexture) vrVideoTexture.dispose();
+    
+    // 4. Kill Video Elements
+    [monitorVideo, phoneVideo, vrVideo].forEach(vid => {
+        vid.pause();
+        vid.src = "";
+        vid.load(); 
+    });
+
+    // 5. Kill Renderer
+    if (renderer) {
+      renderer.dispose();
+      // Force lose context
+      renderer.forceContextLoss();
+      renderer.domElement = null;
+    }
+    
+    // 6. Clear Data Arrays to free RAM
+    particlePositions = null;
+    particleVelocities = null;
+    cubeTargetPositions = null; 
+    coneTargetPositions = null; 
+    monkeyTargetPositions = null;
+    particleColors = null;
+  };
+}
+
+// Helper for cleanup
+function cleanMaterial(material) {
+  material.dispose();
+  if (material.map) material.map.dispose();
+  if (material.emissiveMap) material.emissiveMap.dispose();
+  if (material.envMap) material.envMap.dispose();
 }
 
 init();
