@@ -191,21 +191,11 @@ function updateButtonState(shapeIndex) {
   if (mainText) {
     if (!url || url === '') {
       mainText.innerHTML = 'ACCESS DENIED';
-      console.log(`🚫 Button set to ACCESS DENIED for ${key}`);
     } else {
       mainText.innerHTML = 'VIEW DEMO';
-      console.log(`✅ Button set to VIEW DEMO for ${key}`);
     }
   }
 }
-
-// Debug: Watch for changes
-const observer = new MutationObserver((mutations) => {
-  mutations.forEach((mutation) => {
-    console.log('🔴 TEXT CHANGED BY:', mutation);
-    console.trace(); // Shows what caused the change
-  });
-});
 
 setTimeout(() => {
   const ctaWrapper = document.getElementById('particle-cta-wrapper');
@@ -215,7 +205,6 @@ setTimeout(() => {
       characterData: true, 
       subtree: true 
     });
-    console.log('👁️ Watching #cursor-text for changes');
   }
 }, 2000);
 
@@ -264,31 +253,22 @@ function setupNavButtons() {
 }
 
 function setupCTAButton() {
-  console.log('🔍 Setting up CTA button...');
   
   const ctaWrapper = document.getElementById('particle-cta-wrapper');
   // Select button INSIDE particle-cta-wrapper only
   const mainButton = ctaWrapper ? ctaWrapper.querySelector('.cursor-button-main') : null;
   
-  console.log('🔍 CTA wrapper:', ctaWrapper);
-  console.log('🔍 Main button:', mainButton);
-  
   if (ctaWrapper) {
     ctaWrapper.addEventListener('click', (e) => {
-      console.log('🖱️ CTA wrapper clicked!');
       
       const key = SHAPE_KEYS[currentShapeIndex];
       const url = CONTENT[key].url;
       
-      console.log('🔍 URL:', url);
-      
       if (!url || url === '') {
-        console.log('🚫 ACCESS DENIED - Animating');
-        
+  
         // Just animate - text is already "ACCESS DENIED"
         if (mainButton) {
           mainButton.classList.add('access-denied');
-          console.log('✅ Added access-denied class');
           
           // Remove animation class after it completes
           setTimeout(() => {
@@ -300,7 +280,6 @@ function setupCTAButton() {
         }
         
       } else {
-        console.log('✅ Navigating to:', url);
         window.location.href = url;
       }
     }, true);
@@ -1004,10 +983,10 @@ async function init() {
   renderer.outputEncoding = THREE.sRGBEncoding;
 
   camera = new THREE.PerspectiveCamera(10, window.innerWidth / window.innerHeight, 0.01, 1000);
-  if (window.innerWidth < 480) camera.position.set(0.5, 0.5, -13);
-  else if (window.innerWidth < 768) camera.position.set(0.5, 0.5, -12);
-  else if (window.innerWidth < 1024) camera.position.set(0.5, 0.5, -11);
-  else camera.position.set(0.5, 0.5, -10);
+  if (window.innerWidth < 480) camera.position.set(0.5, 0.5, -12);
+  else if (window.innerWidth < 768) camera.position.set(0.5, 0.5, -11.5);
+  else if (window.innerWidth < 1024) camera.position.set(0.5, 0.5, -10.5);
+  else camera.position.set(0.5, 0.5, -9.5);
   camera.rotation.set(0, Math.PI, 0);
   camera.layers.enable(0);
   camera.layers.enable(1);
