@@ -803,7 +803,7 @@ function getTargetPositions(idx) {
 }
 
 // ==========================================
-// OPTIMIZATION 1: DIRECT MATRIX UPDATE
+// OPTIMIZATION 4: SMARTER MOUSE INTERACTION
 // ==========================================
 
 function updateParticles(deltaTime) {
@@ -812,14 +812,12 @@ function updateParticles(deltaTime) {
   const nextTargets = getTargetPositions(nextShapeIndex);
   const isMorphing = morphProgress < 1.0;
 
-  // Grab the raw array of matrix data (The "Fast Lane")
+  // Direct access to the matrix array (Optimization #1)
   const matrixArray = particleMesh.instanceMatrix.array;
 
-  // OPTIMIZATION: Reuse vector instead of creating new one
   mouseDelta.copy(mouseCoord).sub(prevMouseCoord);
   const mouseMovement = mouseDelta.length();
 
-  // OPTIMIZATION: Early exit if no mouse movement
   const hasMouseForce = mouseMovement > 0.001;
   
   if (hasMouseForce) {
@@ -834,14 +832,12 @@ function updateParticles(deltaTime) {
 
   prevMouseCoord.copy(mouseCoord);
   
-  // OPTIMIZATION: Cache time and frequency values
   const t = elapsedTime;
   const freq = params.turbulenceFreq;
   const turbStr = params.turbulenceStrength * deltaTime;
   const freq2 = params.wave2Freq;
   const wave2Str = params.wave2Strength * deltaTime;
   
-  // OPTIMIZATION: Cache turbulence time multipliers
   const t1 = t;
   const t2 = t * 1.3;
   const t3 = t * 1.1;
@@ -849,8 +845,13 @@ function updateParticles(deltaTime) {
   const t5 = t * 0.8;
   const t6 = t * 1.2;
   
-  // OPTIMIZATION: Cache morphProgress outside loop
   const progress = morphProgress;
+
+  // OPTIMIZATION #4: Pre-calculate the interaction radius
+  // Force falls off to zero when dist * params.mouseRange = 1.0
+  // So effective radius = 1.0 / params.mouseRange
+  // We add 0.1 padding to account for the slight angle of the 3D camera ray
+  const effectiveMouseRadius = (1.0 / params.mouseRange) + 0.1;
 
   for (let i = 0; i < count; i++) {
     const idx = i * 3;
@@ -879,7 +880,6 @@ function updateParticles(deltaTime) {
     const distToTargetSq = dx * dx + dy * dy + dz * dz;
     const isAway = !isMorphing && distToTargetSq > (params.distanceThreshold * params.distanceThreshold);
 
-    // OPTIMIZATION: Use cached time values
     vx += Math.sin(py * freq + t1) * Math.cos(pz * freq + t2) * turbStr;
     vy += Math.sin(pz * freq + t3) * Math.cos(px * freq + t4) * turbStr;
     vz += Math.sin(px * freq + t5) * Math.cos(py * freq + t6) * turbStr;
@@ -900,60 +900,70 @@ function updateParticles(deltaTime) {
     }
 
     if (hasMouseForce && pz >= params.mouseDepthMin && pz <= params.mouseDepthMax) {
-      const dmx = px - mouseRayOrigin.x;
-      const dmy = py - mouseRayOrigin.y;
-      const dmz = pz - mouseRayOrigin.z;
+      
+      // === OPTIMIZATION #4 START ===
+      // Broad Phase Check:
+      // If the particle is too far from the mouse on X or Y, skip the heavy math.
+      // mouseCoord is the mouse position projected on Z=0.
+      if (Math.abs(px - mouseCoord.x) < effectiveMouseRadius && 
+          Math.abs(py - mouseCoord.y) < effectiveMouseRadius) {
 
-      const crx = mouseRayDirection.y * dmz - mouseRayDirection.z * dmy;
-      const cry = mouseRayDirection.z * dmx - mouseRayDirection.x * dmz;
-      const crz = mouseRayDirection.x * dmy - mouseRayDirection.y * dmx;
-      
-      const distSq = crx * crx + cry * cry + crz * crz;
-      const rangeThreshold = 1.0 / (params.mouseRange * params.mouseRange);
-      
-      if (distSq < rangeThreshold) {
-        const dist = Math.sqrt(distSq);
-        const forceMagnitude = Math.max(0, Math.pow(Math.max(0, 1 - dist * params.mouseRange), params.mouseFalloff));
-        
-        if (forceMagnitude > 0.01) {
-          let pushX = mouseForce.x * forceMagnitude;
-          let pushY = mouseForce.y * forceMagnitude;
-          let pushZ = mouseForce.z * forceMagnitude;
+          const dmx = px - mouseRayOrigin.x;
+          const dmy = py - mouseRayOrigin.y;
+          const dmz = pz - mouseRayOrigin.z;
+
+          const crx = mouseRayDirection.y * dmz - mouseRayDirection.z * dmy;
+          const cry = mouseRayDirection.z * dmx - mouseRayDirection.x * dmz;
+          const crz = mouseRayDirection.x * dmy - mouseRayDirection.y * dmx;
           
-          if (isAway && params.vortexStrength > 0) {
-            const pushLenSq = pushX * pushX + pushY * pushY + pushZ * pushZ;
+          const distSq = crx * crx + cry * cry + crz * crz;
+          const rangeThreshold = 1.0 / (params.mouseRange * params.mouseRange);
+          
+          if (distSq < rangeThreshold) {
+            const dist = Math.sqrt(distSq);
+            const forceMagnitude = Math.max(0, Math.pow(Math.max(0, 1 - dist * params.mouseRange), params.mouseFalloff));
             
-            if (pushLenSq > 0.000001) {
-              const pushLen = Math.sqrt(pushLenSq);
-              const pushNormX = pushX / pushLen;
-              const pushNormY = pushY / pushLen;
-              const pushNormZ = pushZ / pushLen;
+            if (forceMagnitude > 0.01) {
+              let pushX = mouseForce.x * forceMagnitude;
+              let pushY = mouseForce.y * forceMagnitude;
+              let pushZ = mouseForce.z * forceMagnitude;
               
-              const upX = 0, upY = 1, upZ = 0;
-              let tangentX = pushNormY * upZ - pushNormZ * upY;
-              let tangentY = pushNormZ * upX - pushNormX * upZ;
-              let tangentZ = pushNormX * upY - pushNormY * upX;
-              
-              const tangentLenSq = tangentX * tangentX + tangentY * tangentY + tangentZ * tangentZ;
-              if (tangentLenSq > 0.000001) {
-                const tangentLen = Math.sqrt(tangentLenSq);
-                tangentX /= tangentLen;
-                tangentY /= tangentLen;
-                tangentZ /= tangentLen;
+              if (isAway && params.vortexStrength > 0) {
+                const pushLenSq = pushX * pushX + pushY * pushY + pushZ * pushZ;
                 
-                const vortexAmount = params.vortexStrength * 0.01 * params.vortexDirection;
-                pushX += tangentX * pushLen * vortexAmount;
-                pushY += tangentY * pushLen * vortexAmount;
-                pushZ += tangentZ * pushLen * vortexAmount;
+                if (pushLenSq > 0.000001) {
+                  const pushLen = Math.sqrt(pushLenSq);
+                  const pushNormX = pushX / pushLen;
+                  const pushNormY = pushY / pushLen;
+                  const pushNormZ = pushZ / pushLen;
+                  
+                  const upX = 0, upY = 1, upZ = 0;
+                  let tangentX = pushNormY * upZ - pushNormZ * upY;
+                  let tangentY = pushNormZ * upX - pushNormX * upZ;
+                  let tangentZ = pushNormX * upY - pushNormY * upX;
+                  
+                  const tangentLenSq = tangentX * tangentX + tangentY * tangentY + tangentZ * tangentZ;
+                  if (tangentLenSq > 0.000001) {
+                    const tangentLen = Math.sqrt(tangentLenSq);
+                    tangentX /= tangentLen;
+                    tangentY /= tangentLen;
+                    tangentZ /= tangentLen;
+                    
+                    const vortexAmount = params.vortexStrength * 0.01 * params.vortexDirection;
+                    pushX += tangentX * pushLen * vortexAmount;
+                    pushY += tangentY * pushLen * vortexAmount;
+                    pushZ += tangentZ * pushLen * vortexAmount;
+                  }
+                }
               }
+              
+              vx += pushX;
+              vy += pushY;
+              vz += pushZ;
             }
           }
-          
-          vx += pushX;
-          vy += pushY;
-          vz += pushZ;
-        }
-      }
+      } 
+      // === OPTIMIZATION #4 END ===
     }
 
     const effectiveSpring = isMorphing ? params.morphSpringStrength : params.springStrength;
@@ -989,16 +999,10 @@ function updateParticles(deltaTime) {
     particleVelocities[idx + 1] = vy;
     particleVelocities[idx + 2] = vz;
 
-    // --- START OF CHANGE ---
-    // REMOVED: dummy.position.set(...) and dummy.updateMatrix()
-    
-    // ADDED: Direct Array Update
-    // We update indices 12, 13, 14 of the 4x4 matrix (the translation columns)
     const offset = i * 16;
     matrixArray[offset + 12] = nx - 0.5;
     matrixArray[offset + 13] = ny - 0.5;
     matrixArray[offset + 14] = nz - 0.5;
-    // --- END OF CHANGE ---
 
     const color = isMorphing ? inPlaceColor : (isAway ? awayColor : inPlaceColor);
     
