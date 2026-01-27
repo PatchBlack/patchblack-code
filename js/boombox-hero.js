@@ -150,7 +150,7 @@ scene.add(fillLight);
 // ===== AUDIO SETUP =====
 const audio = new Audio();
 audio.crossOrigin = "anonymous";
-audio.src = `${ASSET_BASE}/assets/audio/Boombox-audio.mp3`;
+audio.src = `${ASSET_BASE}/assets/audio/Boombox-audio-v2.mp3`;
 audio.preload = "auto";
 
 let isPlaying = false;
