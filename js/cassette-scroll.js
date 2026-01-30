@@ -227,6 +227,9 @@ loader.load(
   (gltf) => {
     cassette = gltf.scene;
 
+    cassette.scale.setScalar(1.5); 
+    
+
      // 🔍 DEBUG: Log all animation names
     console.log('📋 Available animations:');
     gltf.animations.forEach((clip, index) => {
@@ -345,7 +348,7 @@ function animate() {
     currentRotation.x += (targetRotation.x - currentRotation.x) * 0.05;
     currentRotation.y += (targetRotation.y - currentRotation.y) * 0.05;
     cassette.rotation.x = currentRotation.x;
-    cassette.rotation.y = currentRotation.y;
+    cassette.rotation.y = currentRotation.y + Math.PI; 
   }
 
   composer.render();
