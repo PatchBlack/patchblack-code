@@ -65,7 +65,7 @@ const camera = new THREE.PerspectiveCamera(
   0.1,
   1000
 );
-const cameraZ = isTablet() ? 0.5 : 0.5;
+const cameraZ = isTablet() ? 1 : 0.5;
 camera.position.set(0, 0, cameraZ);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -127,7 +127,7 @@ function updateScrollProgress() {
   
   // 🔍 DEBUG: Log when scroll progress changes
   if (Math.abs(scrollProgress - oldProgress) > 0.01) {
-    console.log(`📊 Scroll: ${(scrollProgress * 100).toFixed(0)}% | rect.top: ${rect.top.toFixed(0)} | scrollStart: ${scrollStart.toFixed(0)}`);
+    console.log(`📊 Scroll: ${(scrollProgress * 100).toFixed(0)}%`);
   }
 }
 
@@ -165,7 +165,6 @@ window.addEventListener('touchstart', (event) => {
   const rect = container.getBoundingClientRect();
   const touch = event.touches[0];
   
-  // Check if touch is within canvas area
   const isInsideContainer = 
     touch.clientX >= rect.left && 
     touch.clientX <= rect.right && 
@@ -174,8 +173,6 @@ window.addEventListener('touchstart', (event) => {
   
   if (isInsideContainer) {
     isTouching = true;
-    
-    // Calculate initial position
     mouse.x = ((touch.clientX - rect.left) / rect.width) * 2 - 1;
     mouse.y = ((touch.clientY - rect.top) / rect.height) * 2 - 1;
     mouse.x = Math.max(-1, Math.min(1, mouse.x));
@@ -189,11 +186,9 @@ window.addEventListener('touchmove', (event) => {
   const rect = container.getBoundingClientRect();
   const touch = event.touches[0];
   
-  // Calculate normalized position
   mouse.x = ((touch.clientX - rect.left) / rect.width) * 2 - 1;
   mouse.y = ((touch.clientY - rect.top) / rect.height) * 2 - 1;
   
-  // Clamp values
   mouse.x = Math.max(-1, Math.min(1, mouse.x));
   mouse.y = Math.max(-1, Math.min(1, mouse.y));
 
@@ -201,13 +196,8 @@ window.addEventListener('touchmove', (event) => {
   targetRotation.x = mouse.y * THREE.MathUtils.degToRad(10);
 }, { passive: true });
 
-window.addEventListener('touchend', () => {
-  isTouching = false;
-});
-
-window.addEventListener('touchcancel', () => {
-  isTouching = false;
-});
+window.addEventListener('touchend', () => { isTouching = false; });
+window.addEventListener('touchcancel', () => { isTouching = false; });
 
 // ===== ANIMATION MIXER & ACTIONS =====
 let mixer = null;
@@ -227,15 +217,8 @@ loader.load(
   (gltf) => {
     cassette = gltf.scene;
 
+    // ✅ FIX 1: Increase Size (1.5x)
     cassette.scale.setScalar(1.5); 
-    
-
-     // 🔍 DEBUG: Log all animation names
-    console.log('📋 Available animations:');
-    gltf.animations.forEach((clip, index) => {
-      console.log(`  ${index}: "${clip.name}" (${clip.duration.toFixed(2)}s)`);
-    });
-    // End debug
     
     // Center the model
     const box = new THREE.Box3().setFromObject(cassette);
@@ -250,72 +233,61 @@ loader.load(
       }
     });
 
-// Setup animations
-if (gltf.animations && gltf.animations.length > 0) {
-  mixer = new THREE.AnimationMixer(cassette);
-  const mainClip = gltf.animations[0];
+    // Setup animations
+    if (gltf.animations && gltf.animations.length > 0) {
+      mixer = new THREE.AnimationMixer(cassette);
+      const mainClip = gltf.animations[0];
 
-  // 1. Get Tape Tracks
-  const tape1Tracks = mainClip.tracks.filter(track => 
-    track.name.includes('AudioCasetteTape_High_Plastic_0001')
-  );
-  
-  const tape2Tracks = mainClip.tracks.filter(track => 
-    track.name.includes('AudioCasetteTape_High_Plastic_0002')
-  );
-  
-  // 2. Get Scroll Tracks (CRITICAL FIX HERE)
-  // We strictly filter for the cassette body, EXCLUDING the tapes
-  const scrollTracks = mainClip.tracks.filter(track => 
-    track.name.includes('AudioCasetteHigh') && 
-    !track.name.includes('AudioCasetteTape') // Exclude tapes!
-  );
-  
-  // Create Tape 1
-  if (tape1Tracks.length > 0) {
-    const tape1Clip = new THREE.AnimationClip('Tape1Loop', mainClip.duration, tape1Tracks);
-    loopAction1 = mixer.clipAction(tape1Clip);
-    loopAction1.loop = THREE.LoopRepeat;
-    loopAction1.play();
-  }
-  
-  // Create Tape 2
-  if (tape2Tracks.length > 0) {
-    const tape2Clip = new THREE.AnimationClip('Tape2Loop', mainClip.duration, tape2Tracks);
-    loopAction2 = mixer.clipAction(tape2Clip);
-    loopAction2.loop = THREE.LoopRepeat;
-    loopAction2.play();
-  }
-  
-  // Create Scroll Animation
-  if (scrollTracks.length > 0) {
-    const scrollClip = new THREE.AnimationClip('ScrollAnim', mainClip.duration, scrollTracks);
-    scrollAction = mixer.clipAction(scrollClip);
-    scrollClipDuration = scrollClip.duration;
-    
-    // CRITICAL FIXES:
-    scrollAction.loop = THREE.LoopOnce;
-    scrollAction.clampWhenFinished = true;
-    scrollAction.play(); // 1. Activate the action
-    scrollAction.paused = true; // 2. Pause it immediately (so update(delta) doesn't move it)
-  }
-}
+      // 1. Get Tape Tracks
+      const tape1Tracks = mainClip.tracks.filter(track => 
+        track.name.includes('AudioCasetteTape_High_Plastic_0001')
+      );
+      
+      const tape2Tracks = mainClip.tracks.filter(track => 
+        track.name.includes('AudioCasetteTape_High_Plastic_0002')
+      );
+      
+      // ✅ FIX 2: Filter Logic (Excludes tapes from scroll animation)
+      const scrollTracks = mainClip.tracks.filter(track => 
+        track.name.includes('AudioCasetteHigh') && 
+        !track.name.includes('AudioCasetteTape')
+      );
+      
+      if (tape1Tracks.length > 0) {
+        const tape1Clip = new THREE.AnimationClip('Tape1Loop', mainClip.duration, tape1Tracks);
+        loopAction1 = mixer.clipAction(tape1Clip);
+        loopAction1.loop = THREE.LoopRepeat;
+        loopAction1.play();
+      }
+      
+      if (tape2Tracks.length > 0) {
+        const tape2Clip = new THREE.AnimationClip('Tape2Loop', mainClip.duration, tape2Tracks);
+        loopAction2 = mixer.clipAction(tape2Clip);
+        loopAction2.loop = THREE.LoopRepeat;
+        loopAction2.play();
+      }
+      
+      if (scrollTracks.length > 0) {
+        const scrollClip = new THREE.AnimationClip('ScrollAnim', mainClip.duration, scrollTracks);
+        scrollAction = mixer.clipAction(scrollClip);
+        scrollClipDuration = scrollClip.duration;
+        
+        scrollAction.loop = THREE.LoopOnce;
+        scrollAction.clampWhenFinished = true;
+        scrollAction.play(); 
+        scrollAction.paused = true; // Manually controlled
+      }
+    }
 
     scene.add(cassette);
     
-    // Set initial rotation
-    cassette.rotation.y = THREE.MathUtils.degToRad(20);
-    cassette.rotation.x = THREE.MathUtils.degToRad(-10);
-    
+    // Initial Rotation
     currentRotation.y = THREE.MathUtils.degToRad(20);
     currentRotation.x = THREE.MathUtils.degToRad(-10);
     
     console.log('🎵 Cassette model loaded and ready!');
   },
-  (progress) => {
-    const percent = (progress.loaded / progress.total * 100).toFixed(0);
-    console.log(`📦 Loading cassette: ${percent}%`);
-  },
+  undefined,
   (error) => console.error('❌ Error loading cassette model:', error)
 );
 
@@ -332,27 +304,34 @@ function animate() {
   updateScrollProgress();
 
   if (mixer) {
-    // 1. Advance the Looping Animations automatically
+    // ✅ FIX 3: Stop Loops when Scroll Ends
+    // If scroll is more than 99% complete, stop the tape
+    const isScrollFinished = scrollProgress > 0.99;
+
+    if (loopAction1) loopAction1.paused = isScrollFinished;
+    if (loopAction2) loopAction2.paused = isScrollFinished;
+
+    // Update the mixer (advance tape loops if not paused)
     mixer.update(delta);
     
-    // 2. Manually scrub the Scroll Animation
+    // Manually scrub the Scroll Animation
     if (scrollAction && scrollClipDuration > 0) {
-      // Because we set paused = true in the loader, mixer.update(delta) 
-      // ignores the scroll action. We can safely set the time here.
       scrollAction.time = scrollProgress * scrollClipDuration;
     }
   }
 
-  // Camera rotation logic (keep as is)
   if (cassette) {
     currentRotation.x += (targetRotation.x - currentRotation.x) * 0.05;
     currentRotation.y += (targetRotation.y - currentRotation.y) * 0.05;
+    
     cassette.rotation.x = currentRotation.x;
-    cassette.rotation.y = currentRotation.y + Math.PI; 
+    
+    // ✅ FIX 4: Flip Rotation 180 Degrees
+    // + Math.PI ensures the cassette faces the front
+    cassette.rotation.y = currentRotation.y + Math.PI;
   }
 
   composer.render();
-
 }
 animate();
 
@@ -361,52 +340,31 @@ let resizeTimeout;
 
 window.addEventListener('resize', () => {
   clearTimeout(resizeTimeout);
-  
   resizeTimeout = setTimeout(() => {
     if (!container) return;
-    
-    const containerWidth = container.clientWidth;
-    const containerHeight = container.clientHeight;
-    
-    camera.aspect = containerWidth / containerHeight;
+    const w = container.clientWidth;
+    const h = container.clientHeight;
+    camera.aspect = w / h;
     camera.updateProjectionMatrix();
-    renderer.setSize(containerWidth, containerHeight);
-    composer.setSize(containerWidth, containerHeight);
-    
-    const cameraZ = isTablet() ? 0.5 : 0.5;
-    camera.position.z = cameraZ;
-    
-    console.log('🔄 Cassette scene resized');
+    renderer.setSize(w, h);
+    composer.setSize(w, h);
   }, 150);
 });
 
 // ===== SCROLL LISTENER =====
-window.addEventListener('scroll', () => {
-  updateScrollProgress();
-}, { passive: true });
+window.addEventListener('scroll', updateScrollProgress, { passive: true });
 
-// ===== INTERSECTION OBSERVER FOR PERFORMANCE =====
+// ===== INTERSECTION OBSERVER =====
 function setupIntersectionObserver() {
   if (!container) return;
-
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       isVisible = entry.isIntersecting;
-      
-      if (isVisible) {
-        console.log('👁️ Cassette visible - rendering active');
-        clock.start(); // Resume clock
-      } else {
-        console.log('🙈 Cassette off-screen - rendering paused');
-      }
+      if (isVisible) clock.start();
     });
-  }, {
-    threshold: 0.1
-  });
-
+  }, { threshold: 0.1 });
   observer.observe(container);
 }
-
 setupIntersectionObserver();
 
 console.log('🚀 Cassette scroll experience initialized');
