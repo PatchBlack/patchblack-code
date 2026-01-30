@@ -250,12 +250,9 @@ loader.load(
 // Setup animations
 if (gltf.animations && gltf.animations.length > 0) {
   mixer = new THREE.AnimationMixer(cassette);
-  
   const mainClip = gltf.animations[0];
-  
-  console.log('📋 Splitting animation into 3 separate clips...');
-  
-  // Filter tracks by object name
+
+  // 1. Get Tape Tracks
   const tape1Tracks = mainClip.tracks.filter(track => 
     track.name.includes('AudioCasetteTape_High_Plastic_0001')
   );
@@ -264,36 +261,40 @@ if (gltf.animations && gltf.animations.length > 0) {
     track.name.includes('AudioCasetteTape_High_Plastic_0002')
   );
   
+  // 2. Get Scroll Tracks (CRITICAL FIX HERE)
+  // We strictly filter for the cassette body, EXCLUDING the tapes
   const scrollTracks = mainClip.tracks.filter(track => 
-    track.name.includes('AudioCasetteHigh')
+    track.name.includes('AudioCasetteHigh') && 
+    !track.name.includes('AudioCasetteTape') // Exclude tapes!
   );
   
-  // Create Tape 1 loop animation
+  // Create Tape 1
   if (tape1Tracks.length > 0) {
     const tape1Clip = new THREE.AnimationClip('Tape1Loop', mainClip.duration, tape1Tracks);
     loopAction1 = mixer.clipAction(tape1Clip);
     loopAction1.loop = THREE.LoopRepeat;
     loopAction1.play();
-    console.log(`✅ Tape 1 loop created (${tape1Tracks.length} tracks)`);
   }
   
-  // Create Tape 2 loop animation
+  // Create Tape 2
   if (tape2Tracks.length > 0) {
     const tape2Clip = new THREE.AnimationClip('Tape2Loop', mainClip.duration, tape2Tracks);
     loopAction2 = mixer.clipAction(tape2Clip);
     loopAction2.loop = THREE.LoopRepeat;
     loopAction2.play();
-    console.log(`✅ Tape 2 loop created (${tape2Tracks.length} tracks)`);
   }
   
-  // Create scroll-driven animation (main cassette)
+  // Create Scroll Animation
   if (scrollTracks.length > 0) {
     const scrollClip = new THREE.AnimationClip('ScrollAnim', mainClip.duration, scrollTracks);
     scrollAction = mixer.clipAction(scrollClip);
     scrollClipDuration = scrollClip.duration;
+    
+    // CRITICAL FIXES:
     scrollAction.loop = THREE.LoopOnce;
     scrollAction.clampWhenFinished = true;
-    console.log(`✅ Scroll animation created (${scrollTracks.length} tracks, ${scrollClipDuration.toFixed(2)}s)`);
+    scrollAction.play(); // 1. Activate the action
+    scrollAction.paused = true; // 2. Pause it immediately (so update(delta) doesn't move it)
   }
 }
 
@@ -325,26 +326,21 @@ function animate() {
   
   const delta = clock.getDelta();
 
-  // Update scroll progress
   updateScrollProgress();
 
   if (mixer) {
-    // Update looping animations normally
+    // 1. Advance the Looping Animations automatically
     mixer.update(delta);
     
-    // Override scroll action time based on scroll progress
+    // 2. Manually scrub the Scroll Animation
     if (scrollAction && scrollClipDuration > 0) {
+      // Because we set paused = true in the loader, mixer.update(delta) 
+      // ignores the scroll action. We can safely set the time here.
       scrollAction.time = scrollProgress * scrollClipDuration;
-      scrollAction.weight = 1.0;
-      
-      // Force apply the current time without advancing
-      scrollAction.paused = false;
-      mixer.update(0);
-      scrollAction.paused = true;
     }
   }
 
-  // Lerp camera rotation based on mouse
+  // Camera rotation logic (keep as is)
   if (cassette) {
     currentRotation.x += (targetRotation.x - currentRotation.x) * 0.05;
     currentRotation.y += (targetRotation.y - currentRotation.y) * 0.05;
@@ -353,6 +349,7 @@ function animate() {
   }
 
   composer.render();
+
 }
 animate();
 
