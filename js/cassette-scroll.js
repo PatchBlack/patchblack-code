@@ -65,7 +65,7 @@ const camera = new THREE.PerspectiveCamera(
   0.1,
   1000
 );
-const cameraZ = isTablet() ? 10 : 11;
+const cameraZ = isTablet() ? 0 : 1;
 camera.position.set(0, 0, cameraZ);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
