@@ -331,7 +331,7 @@ window.addEventListener('resize', () => {
     renderer.setSize(containerWidth, containerHeight);
     composer.setSize(containerWidth, containerHeight);
     
-    const cameraZ = isTablet() ? 10 : 11;
+    const cameraZ = isTablet() ? 0 : 0;
     camera.position.z = cameraZ;
     
     console.log('🔄 Cassette scene resized');
