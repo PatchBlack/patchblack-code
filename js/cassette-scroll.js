@@ -67,7 +67,7 @@ let initialZ;
 if (window.innerWidth < 768) {
    initialZ = 1.0; 
 } else {
-   initialZ = 0.5; 
+   initialZ = 0.75; 
 }
 camera.position.set(0, 0, initialZ);
 
@@ -345,7 +345,7 @@ window.addEventListener('resize', () => {
     if (w < 768) {
        camera.position.set(0, 0, 1.0); // Mobile
     } else {
-       camera.position.set(0, 0, 0.5); // Desktop
+       camera.position.set(0, 0, 0.75); // Desktop
     }
   }, 150);
 });
