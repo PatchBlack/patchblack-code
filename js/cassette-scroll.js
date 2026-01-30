@@ -346,15 +346,6 @@ function animate() {
   composer.render();
 }
 animate();
-```
-
----
-
-## **Also Check Console**
-
-What does your console say when you scroll? You should see:
-```
-✅ Scroll animation created (2 tracks, 2.50s)
 
 // ===== RESIZE HANDLER =====
 let resizeTimeout;
