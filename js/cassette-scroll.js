@@ -217,6 +217,13 @@ loader.load(
   'https://cdn.jsdelivr.net/gh/PatchBlack/patchblack-code@main/assets/models/Cassette-01.glb',
   (gltf) => {
     cassette = gltf.scene;
+
+     // 🔍 DEBUG: Log all animation names
+    console.log('📋 Available animations:');
+    gltf.animations.forEach((clip, index) => {
+      console.log(`  ${index}: "${clip.name}" (${clip.duration.toFixed(2)}s)`);
+    });
+    // End debug
     
     // Center the model
     const box = new THREE.Box3().setFromObject(cassette);
