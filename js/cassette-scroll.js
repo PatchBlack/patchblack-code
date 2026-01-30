@@ -319,16 +319,24 @@ function animate() {
   // Update scroll progress
   updateScrollProgress();
 
-  // Update mixer for looping animations
+  // Update mixer
   if (mixer) {
-    mixer.update(delta);
+    // Update ONLY the looping animations (not scroll action)
+    if (loopAction1) loopAction1.getMixer().update(delta);
+    if (loopAction2) loopAction2.getMixer().update(delta);
     
     // Control scroll-driven animation manually
     if (scrollAction && scrollClipDuration > 0) {
-      scrollAction.time = scrollProgress * scrollClipDuration;
-      scrollAction.play(); // Enable the action
-      scrollAction.paused = true; // But keep it paused
-      mixer.update(0); // Force update with 0 delta to apply time change
+      const targetTime = scrollProgress * scrollClipDuration;
+      
+      // Set the time directly without playing
+      scrollAction.time = targetTime;
+      scrollAction.enabled = true;
+      scrollAction.setEffectiveWeight(1.0);
+      
+      // Apply the pose at this specific time
+      const mixer = scrollAction.getMixer();
+      mixer.update(0);
     }
   }
 
