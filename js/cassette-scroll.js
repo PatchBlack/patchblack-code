@@ -65,7 +65,7 @@ const camera = new THREE.PerspectiveCamera(
   0.1,
   1000
 );
-const cameraZ = isTablet() ? 1 : 0.5;
+const cameraZ = isTablet() ? 1 : 0.2;
 camera.position.set(0, 0, cameraZ);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -349,11 +349,8 @@ window.addEventListener('resize', () => {
     renderer.setSize(w, h);
     composer.setSize(w, h);
 
-     if (isTablet()) {
-       camera.position.set(0, 0, 1); // Tablet position
-    } else {
-       camera.position.set(0, 0, 0.5); // Desktop/Mobile position
-    }
+  const cameraZ = isTablet() ? 1 : 0.2;
+camera.position.set(0, 0, cameraZ);
   }, 150);
 });
 
