@@ -238,32 +238,19 @@ loader.load(
       }
     });
 
-    // Setup animations
-    if (gltf.animations && gltf.animations.length > 0) {
-      mixer = new THREE.AnimationMixer(cassette);
-      
-      // Find and setup animations
-      gltf.animations.forEach((clip) => {
-        if (clip.name === 'AudioCasetteTape_High_Plastic_0.001Action') {
-          loopAction1 = mixer.clipAction(clip);
-          loopAction1.loop = THREE.LoopRepeat;
-          loopAction1.play();
-          console.log('✅ Loop animation 1 started');
-        } else if (clip.name === 'AudioCasetteTape_High_Plastic_0.002Action.001') {
-          loopAction2 = mixer.clipAction(clip);
-          loopAction2.loop = THREE.LoopRepeat;
-          loopAction2.play();
-          console.log('✅ Loop animation 2 started');
-        } else if (clip.name === 'AudioCasetteHighAction') {
-          scrollAction = mixer.clipAction(clip);
-          scrollClipDuration = clip.duration;
-          scrollAction.loop = THREE.LoopOnce;
-          scrollAction.clampWhenFinished = true;
-          // Don't play - we'll control time manually via scroll
-          console.log(`✅ Scroll animation loaded (${scrollClipDuration.toFixed(2)}s)`);
-        }
-      });
-    }
+  // Setup animations
+if (gltf.animations && gltf.animations.length > 0) {
+  mixer = new THREE.AnimationMixer(cassette);
+  
+  const mainClip = gltf.animations[0];
+  
+  // 🔍 DEBUG: Show all track names
+  console.log('📋 Animation has ' + mainClip.tracks.length + ' tracks:');
+  mainClip.tracks.forEach((track, index) => {
+    console.log(`  ${index}: "${track.name}"`);
+  });
+  // End debug
+}
 
     scene.add(cassette);
     
