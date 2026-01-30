@@ -65,7 +65,7 @@ const camera = new THREE.PerspectiveCamera(
   0.1,
   1000
 );
-const cameraZ = isTablet() ? 0 : 1;
+const cameraZ = isTablet() ? -5 : -5;
 camera.position.set(0, 0, cameraZ);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -237,17 +237,17 @@ loader.load(
       
       // Find and setup animations
       gltf.animations.forEach((clip) => {
-        if (clip.name === 'AudioCasetteTape_High_Plastic_0.001') {
+        if (clip.name === 'AudioCasetteTape_High_Plastic_0.001Action') {
           loopAction1 = mixer.clipAction(clip);
           loopAction1.loop = THREE.LoopRepeat;
           loopAction1.play();
           console.log('✅ Loop animation 1 started');
-        } else if (clip.name === 'AudioCasetteTape_High_Plastic_0.002') {
+        } else if (clip.name === 'AudioCasetteTape_High_Plastic_0.002Action.001') {
           loopAction2 = mixer.clipAction(clip);
           loopAction2.loop = THREE.LoopRepeat;
           loopAction2.play();
           console.log('✅ Loop animation 2 started');
-        } else if (clip.name === 'AudioCasetteHigh') {
+        } else if (clip.name === 'AudioCasetteHighAction') {
           scrollAction = mixer.clipAction(clip);
           scrollClipDuration = clip.duration;
           scrollAction.loop = THREE.LoopOnce;
@@ -331,7 +331,7 @@ window.addEventListener('resize', () => {
     renderer.setSize(containerWidth, containerHeight);
     composer.setSize(containerWidth, containerHeight);
     
-    const cameraZ = isTablet() ? 0 : 0;
+    const cameraZ = isTablet() ? -5 : -5;
     camera.position.z = cameraZ;
     
     console.log('🔄 Cassette scene resized');
