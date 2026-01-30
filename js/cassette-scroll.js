@@ -40,12 +40,6 @@ function isTouchDevice() {
           (navigator.msMaxTouchPoints > 0));
 }
 
-function isTablet() {
-  const isTouch = isTouchDevice();
-  const width = window.innerWidth;
-  return isTouch && width >= 769 && width <= 1180;
-}
-
 // ===== SCENE SETUP =====
 const scene = new THREE.Scene();
 scene.background = null;
@@ -65,8 +59,17 @@ const camera = new THREE.PerspectiveCamera(
   0.1,
   1000
 );
-const cameraZ = isTablet() ? 1 : 0.2;
-camera.position.set(0, 0, cameraZ);
+
+// ✅ CAMERA POSITION LOGIC
+// Mobile (< 768px): Move back (Z=5) to fit the width.
+// Desktop (> 768px): Move closer (Z=2.5) to make it look HUGE.
+let initialZ;
+if (window.innerWidth < 768) {
+   initialZ = 1.0; 
+} else {
+   initialZ = 0.5; 
+}
+camera.position.set(0, 0, initialZ);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 renderer.setSize(containerWidth, containerHeight);
@@ -117,15 +120,12 @@ function updateScrollProgress() {
   const wrapperHeight = wrapper.offsetHeight;
   const windowHeight = window.innerHeight;
   
-  // Calculate how far we've scrolled through the wrapper
   const scrollStart = -rect.top;
   const scrollRange = wrapperHeight - windowHeight;
   
-  // Clamp between 0 and 1
   const oldProgress = scrollProgress;
   scrollProgress = Math.max(0, Math.min(1, scrollStart / scrollRange));
   
-  // 🔍 DEBUG: Log when scroll progress changes
   if (Math.abs(scrollProgress - oldProgress) > 0.01) {
     console.log(`📊 Scroll: ${(scrollProgress * 100).toFixed(0)}%`);
   }
@@ -141,17 +141,16 @@ window.addEventListener('mousemove', (event) => {
   
   const rect = container.getBoundingClientRect();
   
-  // Only track if container is in viewport
   const isVisible = rect.top < window.innerHeight && rect.bottom > 0;
   if (!isVisible) return;
   
   mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
   mouse.y = ((event.clientY - rect.top) / rect.height) * 2 - 1;
   
-  // Clamp values
   mouse.x = Math.max(-1, Math.min(1, mouse.x));
   mouse.y = Math.max(-1, Math.min(1, mouse.y));
 
+  // ✅ ROTATION AMOUNT (Increased as requested)
   targetRotation.y = mouse.x * THREE.MathUtils.degToRad(45);
   targetRotation.x = mouse.y * THREE.MathUtils.degToRad(35);
 });
@@ -192,6 +191,7 @@ window.addEventListener('touchmove', (event) => {
   mouse.x = Math.max(-1, Math.min(1, mouse.x));
   mouse.y = Math.max(-1, Math.min(1, mouse.y));
 
+  // ✅ ROTATION AMOUNT (Mobile)
   targetRotation.y = mouse.x * THREE.MathUtils.degToRad(45);
   targetRotation.x = mouse.y * THREE.MathUtils.degToRad(35);
 }, { passive: true });
@@ -217,7 +217,7 @@ loader.load(
   (gltf) => {
     cassette = gltf.scene;
 
-    // ✅ FIX 1: Increase Size (1.5x)
+    // ✅ SCALE: 1.5x bigger
     cassette.scale.setScalar(1.5); 
     
     // Center the model
@@ -225,7 +225,6 @@ loader.load(
     const center = box.getCenter(new THREE.Vector3());
     cassette.position.sub(center);
 
-    // Apply environment map intensity
     cassette.traverse((child) => {
       if (child.isMesh && child.material) {
         child.material.envMapIntensity = 1.5;
@@ -233,12 +232,10 @@ loader.load(
       }
     });
 
-    // Setup animations
     if (gltf.animations && gltf.animations.length > 0) {
       mixer = new THREE.AnimationMixer(cassette);
       const mainClip = gltf.animations[0];
 
-      // 1. Get Tape Tracks
       const tape1Tracks = mainClip.tracks.filter(track => 
         track.name.includes('AudioCasetteTape_High_Plastic_0001')
       );
@@ -247,7 +244,7 @@ loader.load(
         track.name.includes('AudioCasetteTape_High_Plastic_0002')
       );
       
-      // ✅ FIX 2: Filter Logic (Excludes tapes from scroll animation)
+      // ✅ FILTER: Separate scroll animation from tapes
       const scrollTracks = mainClip.tracks.filter(track => 
         track.name.includes('AudioCasetteHigh') && 
         !track.name.includes('AudioCasetteTape')
@@ -275,13 +272,12 @@ loader.load(
         scrollAction.loop = THREE.LoopOnce;
         scrollAction.clampWhenFinished = true;
         scrollAction.play(); 
-        scrollAction.paused = true; // Manually controlled
+        scrollAction.paused = true; 
       }
     }
 
     scene.add(cassette);
     
-    // Initial Rotation
     currentRotation.y = THREE.MathUtils.degToRad(20);
     currentRotation.x = THREE.MathUtils.degToRad(-10);
     
@@ -304,17 +300,14 @@ function animate() {
   updateScrollProgress();
 
   if (mixer) {
-    // ✅ FIX 3: Stop Loops when Scroll Ends
-    // If scroll is more than 99% complete, stop the tape
+    // ✅ AUTO-STOP: Stop tapes when scroll ends (> 99%)
     const isScrollFinished = scrollProgress > 0.99;
 
     if (loopAction1) loopAction1.paused = isScrollFinished;
     if (loopAction2) loopAction2.paused = isScrollFinished;
 
-    // Update the mixer (advance tape loops if not paused)
     mixer.update(delta);
     
-    // Manually scrub the Scroll Animation
     if (scrollAction && scrollClipDuration > 0) {
       scrollAction.time = scrollProgress * scrollClipDuration;
     }
@@ -326,8 +319,7 @@ function animate() {
     
     cassette.rotation.x = currentRotation.x;
     
-    // ✅ FIX 4: Flip Rotation 180 Degrees
-    // + Math.PI ensures the cassette faces the front
+    // ✅ FLIP: 180 Degrees
     cassette.rotation.y = currentRotation.y + Math.PI;
   }
 
@@ -349,8 +341,12 @@ window.addEventListener('resize', () => {
     renderer.setSize(w, h);
     composer.setSize(w, h);
 
-  const cameraZ = isTablet() ? 1 : 0.2;
-camera.position.set(0, 0, cameraZ);
+    // ✅ RESIZE LOGIC: Keep Desktop Big, Mobile Small
+    if (w < 768) {
+       camera.position.set(0, 0, 1.0); // Mobile
+    } else {
+       camera.position.set(0, 0, 0.5); // Desktop
+    }
   }, 150);
 });
 
