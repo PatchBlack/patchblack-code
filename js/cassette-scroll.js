@@ -214,7 +214,7 @@ let cassette = null;
 
 const loader = new GLTFLoader();
 loader.load(
-  'https://cdn.jsdelivr.net/gh/PatchBlack/patchblack-code@main/assets/models/Cassette-02.glb',
+  'https://cdn.jsdelivr.net/gh/PatchBlack/patchblack-code@main/assets/models/Cassette-01.glb',
   (gltf) => {
     cassette = gltf.scene;
 
