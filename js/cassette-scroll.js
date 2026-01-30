@@ -65,7 +65,7 @@ const camera = new THREE.PerspectiveCamera(
   0.1,
   1000
 );
-const cameraZ = isTablet() ? -5 : -5;
+const cameraZ = isTablet() ? -2 : -2;
 camera.position.set(0, 0, cameraZ);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -331,7 +331,7 @@ window.addEventListener('resize', () => {
     renderer.setSize(containerWidth, containerHeight);
     composer.setSize(containerWidth, containerHeight);
     
-    const cameraZ = isTablet() ? -5 : -5;
+    const cameraZ = isTablet() ? -2 : -2;
     camera.position.z = cameraZ;
     
     console.log('🔄 Cassette scene resized');
