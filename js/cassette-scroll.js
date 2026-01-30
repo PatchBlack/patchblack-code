@@ -108,7 +108,10 @@ let scrollProgress = 0; // 0 to 1
 
 function updateScrollProgress() {
   const wrapper = document.getElementById('cassette-scroll-wrapper');
-  if (!wrapper) return;
+  if (!wrapper) {
+    console.warn('⚠️ cassette-scroll-wrapper not found!');
+    return;
+  }
 
   const rect = wrapper.getBoundingClientRect();
   const wrapperHeight = wrapper.offsetHeight;
@@ -119,7 +122,13 @@ function updateScrollProgress() {
   const scrollRange = wrapperHeight - windowHeight;
   
   // Clamp between 0 and 1
+  const oldProgress = scrollProgress;
   scrollProgress = Math.max(0, Math.min(1, scrollStart / scrollRange));
+  
+  // 🔍 DEBUG: Log when scroll progress changes
+  if (Math.abs(scrollProgress - oldProgress) > 0.01) {
+    console.log(`📊 Scroll: ${(scrollProgress * 100).toFixed(0)}% | rect.top: ${rect.top.toFixed(0)} | scrollStart: ${scrollStart.toFixed(0)}`);
+  }
 }
 
 // ===== MOUSE TRACKING FOR CAMERA ROTATION =====
