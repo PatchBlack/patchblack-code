@@ -312,31 +312,26 @@ let isVisible = true;
 function animate() {
   requestAnimationFrame(animate);
   
-  if (!isVisible) return; // Skip rendering if off-screen
+  if (!isVisible) return;
   
   const delta = clock.getDelta();
 
   // Update scroll progress
   updateScrollProgress();
 
-  // Update mixer
   if (mixer) {
-    // Update ONLY the looping animations (not scroll action)
-    if (loopAction1) loopAction1.getMixer().update(delta);
-    if (loopAction2) loopAction2.getMixer().update(delta);
+    // Update looping animations normally
+    mixer.update(delta);
     
-    // Control scroll-driven animation manually
+    // Override scroll action time based on scroll progress
     if (scrollAction && scrollClipDuration > 0) {
-      const targetTime = scrollProgress * scrollClipDuration;
+      scrollAction.time = scrollProgress * scrollClipDuration;
+      scrollAction.weight = 1.0;
       
-      // Set the time directly without playing
-      scrollAction.time = targetTime;
-      scrollAction.enabled = true;
-      scrollAction.setEffectiveWeight(1.0);
-      
-      // Apply the pose at this specific time
-      const mixer = scrollAction.getMixer();
+      // Force apply the current time without advancing
+      scrollAction.paused = false;
       mixer.update(0);
+      scrollAction.paused = true;
     }
   }
 
@@ -351,6 +346,15 @@ function animate() {
   composer.render();
 }
 animate();
+```
+
+---
+
+## **Also Check Console**
+
+What does your console say when you scroll? You should see:
+```
+✅ Scroll animation created (2 tracks, 2.50s)
 
 // ===== RESIZE HANDLER =====
 let resizeTimeout;
