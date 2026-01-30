@@ -238,18 +238,54 @@ loader.load(
       }
     });
 
-  // Setup animations
+// Setup animations
 if (gltf.animations && gltf.animations.length > 0) {
   mixer = new THREE.AnimationMixer(cassette);
   
   const mainClip = gltf.animations[0];
   
-  // 🔍 DEBUG: Show all track names
-  console.log('📋 Animation has ' + mainClip.tracks.length + ' tracks:');
-  mainClip.tracks.forEach((track, index) => {
-    console.log(`  ${index}: "${track.name}"`);
-  });
-  // End debug
+  console.log('📋 Splitting animation into 3 separate clips...');
+  
+  // Filter tracks by object name
+  const tape1Tracks = mainClip.tracks.filter(track => 
+    track.name.includes('AudioCasetteTape_High_Plastic_0001')
+  );
+  
+  const tape2Tracks = mainClip.tracks.filter(track => 
+    track.name.includes('AudioCasetteTape_High_Plastic_0002')
+  );
+  
+  const scrollTracks = mainClip.tracks.filter(track => 
+    track.name.includes('AudioCasetteHigh')
+  );
+  
+  // Create Tape 1 loop animation
+  if (tape1Tracks.length > 0) {
+    const tape1Clip = new THREE.AnimationClip('Tape1Loop', mainClip.duration, tape1Tracks);
+    loopAction1 = mixer.clipAction(tape1Clip);
+    loopAction1.loop = THREE.LoopRepeat;
+    loopAction1.play();
+    console.log(`✅ Tape 1 loop created (${tape1Tracks.length} tracks)`);
+  }
+  
+  // Create Tape 2 loop animation
+  if (tape2Tracks.length > 0) {
+    const tape2Clip = new THREE.AnimationClip('Tape2Loop', mainClip.duration, tape2Tracks);
+    loopAction2 = mixer.clipAction(tape2Clip);
+    loopAction2.loop = THREE.LoopRepeat;
+    loopAction2.play();
+    console.log(`✅ Tape 2 loop created (${tape2Tracks.length} tracks)`);
+  }
+  
+  // Create scroll-driven animation (main cassette)
+  if (scrollTracks.length > 0) {
+    const scrollClip = new THREE.AnimationClip('ScrollAnim', mainClip.duration, scrollTracks);
+    scrollAction = mixer.clipAction(scrollClip);
+    scrollClipDuration = scrollClip.duration;
+    scrollAction.loop = THREE.LoopOnce;
+    scrollAction.clampWhenFinished = true;
+    console.log(`✅ Scroll animation created (${scrollTracks.length} tracks, ${scrollClipDuration.toFixed(2)}s)`);
+  }
 }
 
     scene.add(cassette);
