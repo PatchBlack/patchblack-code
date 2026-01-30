@@ -218,7 +218,7 @@ loader.load(
     cassette = gltf.scene;
 
     // ✅ SCALE: 1.5x bigger
-    cassette.scale.setScalar(1.5); 
+    cassette.scale.setScalar(3.5); 
     
     // Center the model
     const box = new THREE.Box3().setFromObject(cassette);
