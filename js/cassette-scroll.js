@@ -9,7 +9,7 @@ import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 const ChromaticAberrationShader = {
   uniforms: {
     'tDiffuse': { value: null },
-    'amount': { value: 0.002 }
+    'amount': { value: 0.004 }
   },
   vertexShader: `
     varying vec2 vUv;
@@ -152,8 +152,8 @@ window.addEventListener('mousemove', (event) => {
   mouse.x = Math.max(-1, Math.min(1, mouse.x));
   mouse.y = Math.max(-1, Math.min(1, mouse.y));
 
-  targetRotation.y = mouse.x * THREE.MathUtils.degToRad(20);
-  targetRotation.x = mouse.y * THREE.MathUtils.degToRad(10);
+  targetRotation.y = mouse.x * THREE.MathUtils.degToRad(45);
+  targetRotation.x = mouse.y * THREE.MathUtils.degToRad(35);
 });
 
 // ===== TOUCH TRACKING FOR MOBILE =====
@@ -192,8 +192,8 @@ window.addEventListener('touchmove', (event) => {
   mouse.x = Math.max(-1, Math.min(1, mouse.x));
   mouse.y = Math.max(-1, Math.min(1, mouse.y));
 
-  targetRotation.y = mouse.x * THREE.MathUtils.degToRad(20);
-  targetRotation.x = mouse.y * THREE.MathUtils.degToRad(10);
+  targetRotation.y = mouse.x * THREE.MathUtils.degToRad(45);
+  targetRotation.x = mouse.y * THREE.MathUtils.degToRad(35);
 }, { passive: true });
 
 window.addEventListener('touchend', () => { isTouching = false; });
@@ -348,6 +348,12 @@ window.addEventListener('resize', () => {
     camera.updateProjectionMatrix();
     renderer.setSize(w, h);
     composer.setSize(w, h);
+
+     if (isTablet()) {
+       camera.position.set(0, 0, 1); // Tablet position
+    } else {
+       camera.position.set(0, 0, 0.5); // Desktop/Mobile position
+    }
   }, 150);
 });
 
