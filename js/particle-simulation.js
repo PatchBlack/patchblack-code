@@ -1,5 +1,4 @@
-// particle-sim.js - Complete particle simulation with navigation and text transitions
-// OPTIMIZED VERSION - 15-25% performance improvement with zero visual changes
+// particle-sim.js - Optimized
 
 import * as THREE from 'three';
 import { HDRLoader } from 'three/addons/loaders/HDRLoader.js';
@@ -17,19 +16,19 @@ const CONTENT = {
     heading: "Product Stories",
     description: "Interactive narratives that turn complex content into clear, engaging digital products.",
     subtext: "Reports · Case studies · Platforms",
-    url: "/temp-demo"  // Change to your actual URL, or leave empty "" to show popup
+    url: ""
   },
   phone: {
     heading: "Living Interfaces",
     description: "Interactions designed to respond, adapt, and guide users through story-led experiences.",
     subtext: "Apps · Web apps · Interactive systems",
-    url: ""// Change to your actual URL, or leave empty "" to show popup
+    url: ""
   },
   vr: {
     heading: "Immersive Narratives",
     description: "Stories extended into spatial and immersive environments that invite exploration.",
     subtext: "AR · VR · Spatial experiences",
-    url: ""// Change to your actual URL, or leave empty "" to show popup
+    url: ""
   }
 };
 
@@ -50,6 +49,9 @@ let cubeTargetPositions, coneTargetPositions, monkeyTargetPositions;
 let cubePositions, conePositions, monkeyPositions;
 let globalMinX, globalMaxX, globalMinY, globalMaxY, globalMinZ, globalMaxZ, globalMaxRange;
 
+// Optimization: Color State Tracking
+let particleStates; 
+
 let currentShapeIndex = 0;
 let nextShapeIndex = 1;
 let morphProgress = 1.0;
@@ -66,22 +68,16 @@ const wave2PostDelay = 0.5;
 let morphQueued = false;
 let manualMorphDirection = 0;
 
-const shapeNames = ['Monitor', 'Phone', 'VR'];
-
 const mouseCoord = new THREE.Vector3();
 const prevMouseCoord = new THREE.Vector3();
 const mouseRayOrigin = new THREE.Vector3();
 const mouseRayDirection = new THREE.Vector3();
 const mouseForce = new THREE.Vector3();
-
-// OPTIMIZATION: Reusable Vector3 objects (avoid allocations)
 const mouseDelta = new THREE.Vector3();
-const tempVec3 = new THREE.Vector3();
 
 let elapsedTime = 0;
 
 const dummy = new THREE.Object3D();
-const tempColor = new THREE.Color();
 
 const params = {
   particleCount: 40000,
@@ -105,16 +101,25 @@ const params = {
   vortexDirection: 1,
 };
 
-const inPlaceColor = { r: 0.690, g: 0.733, b: 0.796 };
-const awayColor = { r: 1.0, g: 0.831, b: 0.255 };
+// Optimization: Pre-calculated colors to avoid Math.pow in loop
 const gamma = 2.2;
+const cInPlaceRaw = { r: 0.690, g: 0.733, b: 0.796 };
+const cAwayRaw = { r: 1.0, g: 0.831, b: 0.255 };
+
+const colorHome = new THREE.Color().setRGB(
+  Math.pow(cInPlaceRaw.r, gamma),
+  Math.pow(cInPlaceRaw.g, gamma),
+  Math.pow(cInPlaceRaw.b, gamma)
+);
+const colorAway = new THREE.Color().setRGB(
+  Math.pow(cAwayRaw.r, gamma),
+  Math.pow(cAwayRaw.g, gamma),
+  Math.pow(cAwayRaw.b, gamma)
+);
 
 const venetianMaterials = [];
-let particleColors = null;
-
-// OPTIMIZATION: Shader update throttling
 let lastShaderUpdate = 0;
-const shaderUpdateInterval = 1000 / 60; // 60fps
+const shaderUpdateInterval = 1000 / 60;
 
 // ==========================================
 // VIDEO SETUP
@@ -207,7 +212,6 @@ function updateButtonState(shapeIndex) {
 }
 
 setTimeout(() => {
-  const ctaWrapper = document.getElementById('particle-cta-wrapper');
   const mainText = document.getElementById('particle-cursor-text');
   if (mainText) {
     const observer = new MutationObserver(() => {});
@@ -218,7 +222,6 @@ setTimeout(() => {
     });
   }
 }, 2000);
-
 
 function initTextTransitions() {
   const heading = document.getElementById('particle-heading');
@@ -232,6 +235,7 @@ function initTextTransitions() {
   updateTextContent(0);
   updateButtonState(0);
 }
+
 // ==========================================
 // BUTTON NAVIGATION
 // ==========================================
@@ -264,38 +268,25 @@ function setupNavButtons() {
 }
 
 function setupCTAButton() {
-  
   const ctaWrapper = document.getElementById('particle-cta-wrapper');
-  // Select button INSIDE particle-cta-wrapper only
   const mainButton = ctaWrapper ? ctaWrapper.querySelector('.cursor-button-main') : null;
   
   if (ctaWrapper) {
     ctaWrapper.addEventListener('click', (e) => {
-      
       const key = SHAPE_KEYS[currentShapeIndex];
       const url = CONTENT[key].url;
       
       if (!url || url === '') {
-  
-        // Just animate - text is already "ACCESS DENIED"
         if (mainButton) {
           mainButton.classList.add('access-denied');
-          
-          // Remove animation class after it completes
           setTimeout(() => {
             mainButton.classList.remove('access-denied');
-            console.log('✅ Removed access-denied class');
           }, 500);
-        } else {
-          console.error('❌ Main button not found!');
         }
-        
       } else {
         window.location.href = url;
       }
     }, true);
-    
-    // Set initial button state
     updateButtonState(currentShapeIndex);
   }
 }
@@ -556,6 +547,7 @@ function createParticlePositions() {
   cubeTargetPositions = new Float32Array(count * 3);
   coneTargetPositions = new Float32Array(count * 3);
   monkeyTargetPositions = new Float32Array(count * 3);
+  particleStates = new Uint8Array(count); 
 
   for (let i = 0; i < count; i++) {
     const cubeNorm = normalizePosition(cubePositions[i]);
@@ -577,6 +569,8 @@ function createParticlePositions() {
     particlePositions[i * 3] = cubeNorm.x;
     particlePositions[i * 3 + 1] = cubeNorm.y;
     particlePositions[i * 3 + 2] = cubeNorm.z;
+    
+    particleStates[i] = 0; 
   }
 
   return count;
@@ -613,13 +607,7 @@ function setupParticles() {
     );
     dummy.updateMatrix();
     particleMesh.setMatrixAt(i, dummy.matrix);
-
-    tempColor.setRGB(
-      Math.pow(inPlaceColor.r, gamma),
-      Math.pow(inPlaceColor.g, gamma),
-      Math.pow(inPlaceColor.b, gamma)
-    );
-    particleMesh.setColorAt(i, tempColor);
+    particleMesh.setColorAt(i, colorHome);
   }
 
   particleMesh.instanceMatrix.needsUpdate = true;
@@ -770,18 +758,14 @@ function updateModels() {
     });
   }
 
-  // OPTIMIZATION: Throttle shader uniform updates
   const now = performance.now();
   const shouldUpdateShaders = (now - lastShaderUpdate > shaderUpdateInterval);
 
   venetianMaterials.forEach((mat) => {
     if (mat.userData.shader) {
       const s = mat.userData.shader;
-      
-      // Always update time for smooth animation
       s.uniforms.uTime.value = elapsedTime;
       
-      // Throttle other uniforms (they change less frequently)
       if (shouldUpdateShaders) {
         s.uniforms.uCurrentShapeIndex.value = currentShapeIndex;
         s.uniforms.uNextShapeIndex.value = nextShapeIndex;
@@ -803,7 +787,7 @@ function getTargetPositions(idx) {
 }
 
 // ==========================================
-// OPTIMIZATION 4: SMARTER MOUSE INTERACTION
+// OPTIMIZED PARTICLE UPDATE
 // ==========================================
 
 function updateParticles(deltaTime) {
@@ -811,13 +795,11 @@ function updateParticles(deltaTime) {
   const currentTargets = getTargetPositions(currentShapeIndex);
   const nextTargets = getTargetPositions(nextShapeIndex);
   const isMorphing = morphProgress < 1.0;
-
-  // Direct access to the matrix array (Optimization #1)
+  
   const matrixArray = particleMesh.instanceMatrix.array;
 
   mouseDelta.copy(mouseCoord).sub(prevMouseCoord);
   const mouseMovement = mouseDelta.length();
-
   const hasMouseForce = mouseMovement > 0.001;
   
   if (hasMouseForce) {
@@ -837,6 +819,11 @@ function updateParticles(deltaTime) {
   const turbStr = params.turbulenceStrength * deltaTime;
   const freq2 = params.wave2Freq;
   const wave2Str = params.wave2Strength * deltaTime;
+  const effectiveMouseRadius = (1.0 / params.mouseRange) + 0.1;
+  const rangeThreshold = 1.0 / (params.mouseRange * params.mouseRange);
+  const distThresholdSq = params.distanceThreshold * params.distanceThreshold;
+  const springStrength = isMorphing ? params.morphSpringStrength : params.springStrength;
+  const effectiveSpring = springStrength * deltaTime * (isMorphing ? 1 : 5);
   
   const t1 = t;
   const t2 = t * 1.3;
@@ -844,14 +831,20 @@ function updateParticles(deltaTime) {
   const t4 = t * 0.9;
   const t5 = t * 0.8;
   const t6 = t * 1.2;
-  
-  const progress = morphProgress;
 
-  // OPTIMIZATION #4: Pre-calculate the interaction radius
-  // Force falls off to zero when dist * params.mouseRange = 1.0
-  // So effective radius = 1.0 / params.mouseRange
-  // We add 0.1 padding to account for the slight angle of the 3D camera ray
-  const effectiveMouseRadius = (1.0 / params.mouseRange) + 0.1;
+  let colorsNeedUpdate = false;
+  
+  // Wave strength calculation hoisted
+  let activeWaveStrength = 0;
+  if (isWave2Active) {
+    let wave2Multiplier = 1.0;
+    if (morphProgress >= 1.0) {
+      const timeSinceEnd = wave2Timer - morphDuration;
+      const fadeProgress = timeSinceEnd / wave2PostDelay;
+      wave2Multiplier = Math.max(0, 1.0 - fadeProgress);
+    }
+    activeWaveStrength = wave2Str * wave2Multiplier;
+  }
 
   for (let i = 0; i < count; i++) {
     const idx = i * 3;
@@ -865,9 +858,9 @@ function updateParticles(deltaTime) {
 
     let tx, ty, tz;
     if (isMorphing) {
-      tx = currentTargets[idx] + (nextTargets[idx] - currentTargets[idx]) * progress;
-      ty = currentTargets[idx + 1] + (nextTargets[idx + 1] - currentTargets[idx + 1]) * progress;
-      tz = currentTargets[idx + 2] + (nextTargets[idx + 2] - currentTargets[idx + 2]) * progress;
+      tx = currentTargets[idx] + (nextTargets[idx] - currentTargets[idx]) * morphProgress;
+      ty = currentTargets[idx + 1] + (nextTargets[idx + 1] - currentTargets[idx + 1]) * morphProgress;
+      tz = currentTargets[idx + 2] + (nextTargets[idx + 2] - currentTargets[idx + 2]) * morphProgress;
     } else {
       tx = currentTargets[idx];
       ty = currentTargets[idx + 1];
@@ -877,34 +870,25 @@ function updateParticles(deltaTime) {
     const dx = tx - px;
     const dy = ty - py;
     const dz = tz - pz;
-    const distToTargetSq = dx * dx + dy * dy + dz * dz;
-    const isAway = !isMorphing && distToTargetSq > (params.distanceThreshold * params.distanceThreshold);
+    
+    // Only calculate away distance if not morphing (needed for color logic)
+    let isAway = false;
+    if (!isMorphing) {
+       const distToTargetSq = dx * dx + dy * dy + dz * dz;
+       isAway = distToTargetSq > distThresholdSq;
+    }
 
     vx += Math.sin(py * freq + t1) * Math.cos(pz * freq + t2) * turbStr;
     vy += Math.sin(pz * freq + t3) * Math.cos(px * freq + t4) * turbStr;
     vz += Math.sin(px * freq + t5) * Math.cos(py * freq + t6) * turbStr;
 
-    if (isWave2Active) {
-      let wave2Multiplier = 1.0;
-      
-      if (morphProgress >= 1.0) {
-        const timeSinceEnd = wave2Timer - morphDuration;
-        const fadeProgress = timeSinceEnd / wave2PostDelay;
-        wave2Multiplier = Math.max(0, 1.0 - fadeProgress);
-      }
-      
-      const strength = wave2Str * wave2Multiplier;
-      vx += Math.sin(py * freq2 + t1) * Math.cos(pz * freq2 + t2) * strength;
-      vy += Math.sin(pz * freq2 + t3) * Math.cos(px * freq2 + t4) * strength;
-      vz += Math.sin(px * freq2 + t5) * Math.cos(py * freq2 + t6) * strength;
+    if (activeWaveStrength > 0) {
+      vx += Math.sin(py * freq2 + t1) * Math.cos(pz * freq2 + t2) * activeWaveStrength;
+      vy += Math.sin(pz * freq2 + t3) * Math.cos(px * freq2 + t4) * activeWaveStrength;
+      vz += Math.sin(px * freq2 + t5) * Math.cos(py * freq2 + t6) * activeWaveStrength;
     }
 
     if (hasMouseForce && pz >= params.mouseDepthMin && pz <= params.mouseDepthMax) {
-      
-      // === OPTIMIZATION #4 START ===
-      // Broad Phase Check:
-      // If the particle is too far from the mouse on X or Y, skip the heavy math.
-      // mouseCoord is the mouse position projected on Z=0.
       if (Math.abs(px - mouseCoord.x) < effectiveMouseRadius && 
           Math.abs(py - mouseCoord.y) < effectiveMouseRadius) {
 
@@ -917,7 +901,6 @@ function updateParticles(deltaTime) {
           const crz = mouseRayDirection.x * dmy - mouseRayDirection.y * dmx;
           
           const distSq = crx * crx + cry * cry + crz * crz;
-          const rangeThreshold = 1.0 / (params.mouseRange * params.mouseRange);
           
           if (distSq < rangeThreshold) {
             const dist = Math.sqrt(distSq);
@@ -963,21 +946,11 @@ function updateParticles(deltaTime) {
             }
           }
       } 
-      // === OPTIMIZATION #4 END ===
     }
 
-    const effectiveSpring = isMorphing ? params.morphSpringStrength : params.springStrength;
-
-    let spring;
-    if (isMorphing) {
-      spring = effectiveSpring * deltaTime;
-    } else {
-      spring = effectiveSpring * deltaTime * 5;
-    }
-
-    vx += dx * spring;
-    vy += dy * spring;
-    vz += dz * spring;
+    vx += dx * effectiveSpring;
+    vy += dy * effectiveSpring;
+    vz += dz * effectiveSpring;
 
     vx *= params.damping;
     vy *= params.damping;
@@ -988,9 +961,10 @@ function updateParticles(deltaTime) {
     let nx = px + vx * deltaTime;
     let ny = py + vy * deltaTime;
     let nz = pz + vz * deltaTime;
-    nx = Math.max(0, Math.min(1, nx));
-    ny = Math.max(0, Math.min(1, ny));
-    nz = Math.max(0, Math.min(1, nz));
+    
+    if (nx < 0) nx = 0; else if (nx > 1) nx = 1;
+    if (ny < 0) ny = 0; else if (ny > 1) ny = 1;
+    if (nz < 0) nz = 0; else if (nz > 1) nz = 1;
 
     particlePositions[idx] = nx;
     particlePositions[idx + 1] = ny;
@@ -1004,23 +978,22 @@ function updateParticles(deltaTime) {
     matrixArray[offset + 13] = ny - 0.5;
     matrixArray[offset + 14] = nz - 0.5;
 
-    const color = isMorphing ? inPlaceColor : (isAway ? awayColor : inPlaceColor);
+    // Optimized Color Update: Only update buffer if state changes
+    // State 0: Home, State 1: Away
+    // If morphing, always Home (0)
+    const targetState = (isMorphing ? false : isAway) ? 1 : 0;
     
-    if (!particleColors || particleColors[i] !== color) {
-      tempColor.setRGB(
-        Math.pow(color.r, gamma),
-        Math.pow(color.g, gamma),
-        Math.pow(color.b, gamma)
-      );
-      particleMesh.setColorAt(i, tempColor);
-      
-      if (!particleColors) particleColors = new Array(count);
-      particleColors[i] = color;
+    if (particleStates[i] !== targetState) {
+        particleMesh.setColorAt(i, targetState === 1 ? colorAway : colorHome);
+        particleStates[i] = targetState;
+        colorsNeedUpdate = true;
     }
   }
 
   particleMesh.instanceMatrix.needsUpdate = true;
-  if (particleMesh.instanceColor) particleMesh.instanceColor.needsUpdate = true;
+  if (colorsNeedUpdate && particleMesh.instanceColor) {
+    particleMesh.instanceColor.needsUpdate = true;
+  }
 }
 
 // ==========================================
@@ -1175,12 +1148,10 @@ function setupIntersectionObserver() {
 }
 
 // ==========================================
-// OPTIMIZATION 5 & 6: LIFECYCLE & CLEANUP
+// CLEANUP
 // ==========================================
 
 function setupLifecycle() {
-  // --- OPTIMIZATION 5: BATTERY SAVER ---
-  // If the user switches tabs, stop the heavy loop immediately.
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
       renderer.setAnimationLoop(null);
@@ -1188,7 +1159,6 @@ function setupLifecycle() {
       phoneVideo.pause();
       vrVideo.pause();
     } else {
-      // When tab comes back, resume only if the renderer exists
       if (renderer) {
         renderer.setAnimationLoop(render);
         updateVideoPlayback();
@@ -1196,15 +1166,9 @@ function setupLifecycle() {
     }
   });
 
-  // --- OPTIMIZATION 6: MEMORY CLEANUP ---
-  // Call window.disposeParticleSim() if you navigate away (in React/Vue/Next.js)
   window.disposeParticleSim = function() {
-    console.log("♻️ Cleaning up Particle Sim...");
-
-    // 1. Stop the loop
     renderer.setAnimationLoop(null);
 
-    // 2. Dispose of Materials and Geometry
     scene.traverse((object) => {
       if (object.isMesh) {
         if (object.geometry) object.geometry.dispose();
@@ -1219,37 +1183,31 @@ function setupLifecycle() {
       }
     });
 
-    // 3. Dispose Video Textures
     if (monitorVideoTexture) monitorVideoTexture.dispose();
     if (phoneVideoTexture) phoneVideoTexture.dispose();
     if (vrVideoTexture) vrVideoTexture.dispose();
     
-    // 4. Kill Video Elements
     [monitorVideo, phoneVideo, vrVideo].forEach(vid => {
         vid.pause();
         vid.src = "";
         vid.load(); 
     });
 
-    // 5. Kill Renderer
     if (renderer) {
       renderer.dispose();
-      // Force lose context
       renderer.forceContextLoss();
       renderer.domElement = null;
     }
     
-    // 6. Clear Data Arrays to free RAM
     particlePositions = null;
     particleVelocities = null;
     cubeTargetPositions = null; 
     coneTargetPositions = null; 
     monkeyTargetPositions = null;
-    particleColors = null;
+    particleStates = null;
   };
 }
 
-// Helper for cleanup
 function cleanMaterial(material) {
   material.dispose();
   if (material.map) material.map.dispose();
