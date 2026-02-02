@@ -576,27 +576,7 @@ function setupButton() {
   }
 }
 
-// ===== ANIMATION LOOP =====
-function animate() {
-  requestAnimationFrame(animate);
-  
-  // Only render when visible
-  if (!isVisible) return;
-  
-  const delta = clock.getDelta();
 
-  if (mixer && isPlaying) mixer.update(delta);
-  drawWaveform();
-
-  if (boombox) {
-    currentRotation.x += (targetRotation.x - currentRotation.x) * 0.05;
-    currentRotation.y += (targetRotation.y - currentRotation.y) * 0.05;
-    boombox.rotation.x = currentRotation.x;
-    boombox.rotation.y = currentRotation.y;
-  }
-  composer.render();
-}
-animate();
 
 // ===== RESIZE & RESPONSIVENESS =====
 function handleResponsiveness() {
@@ -671,3 +651,25 @@ function setupIntersectionObserver() {
 }
 
 setupIntersectionObserver();
+
+// ===== ANIMATION LOOP =====
+function animate() {
+  requestAnimationFrame(animate);
+  
+  // Only render when visible
+  if (!isVisible) return;
+  
+  const delta = clock.getDelta();
+
+  if (mixer && isPlaying) mixer.update(delta);
+  drawWaveform();
+
+  if (boombox) {
+    currentRotation.x += (targetRotation.x - currentRotation.x) * 0.05;
+    currentRotation.y += (targetRotation.y - currentRotation.y) * 0.05;
+    boombox.rotation.x = currentRotation.x;
+    boombox.rotation.y = currentRotation.y;
+  }
+  composer.render();
+}
+animate();
