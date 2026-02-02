@@ -36,7 +36,7 @@ function isTablet() {
   return isTouch && width >= 769 && width <= 1180;
 }
 
-// ===== SHADERS =====
+// ===== CHROMATIC ABERRATION SHADER =====
 const ChromaticAberrationShader = {
   uniforms: {
     'tDiffuse': { value: null },
@@ -53,6 +53,7 @@ const ChromaticAberrationShader = {
     uniform sampler2D tDiffuse;
     uniform float amount;
     varying vec2 vUv;
+    
     void main() {
       vec2 offset = amount * (vUv - 0.5);
       vec4 cr = texture2D(tDiffuse, vUv + offset);
@@ -71,7 +72,12 @@ const container = document.getElementById('canvas-container');
 const containerWidth = container.clientWidth;
 const containerHeight = container.clientHeight;
 
-const camera = new THREE.PerspectiveCamera(45, containerWidth / containerHeight, 0.1, 1000);
+const camera = new THREE.PerspectiveCamera(
+  45,
+  containerWidth / containerHeight,
+  0.1,
+  1000
+);
 const cameraZ = isTablet() ? 10 : 11;
 camera.position.set(0, 0, cameraZ);
 
@@ -81,23 +87,34 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.2;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
+
 container.appendChild(renderer.domElement);
 
+// ===== POST-PROCESSING =====
 const composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, camera));
 
 const chromaticPass = new ShaderPass(ChromaticAberrationShader);
 chromaticPass.uniforms['amount'].value = 0.005;
 composer.addPass(chromaticPass);
+
 composer.addPass(new OutputPass());
 
+// ===== HDR ENVIRONMENT =====
 const rgbeLoader = new RGBELoader(loadingManager);
-rgbeLoader.load(`${ASSET_BASE}/assets/textures/royal_esplanade_1k.hdr`, (texture) => {
+rgbeLoader.load(
+  `${ASSET_BASE}/assets/textures/royal_esplanade_1k.hdr`,
+  (texture) => {
     texture.mapping = THREE.EquirectangularReflectionMapping;
     scene.environment = texture;
-  }, undefined, () => {});
+  },
+  undefined,
+  () => {}
+);
 
+// ===== LIGHTING =====
 scene.add(new THREE.AmbientLight(0xb0bbcb, 0.6));
+
 const keyLight = new THREE.DirectionalLight(0xb0bbcb, 5);
 keyLight.position.set(5, 8, 5);
 keyLight.castShadow = true;
@@ -111,11 +128,12 @@ const fillLight = new THREE.DirectionalLight(0xb0bbcb, 0.5);
 fillLight.position.set(0, -3, 5);
 scene.add(fillLight);
 
-// ===== AUDIO & VIDEO SETUP =====
+// ===== AUDIO SETUP =====
 const audio = new Audio();
 audio.crossOrigin = "anonymous";
 audio.src = `${ASSET_BASE}/assets/audio/Boombox-audio-v2.mp3`;
 audio.preload = "auto";
+
 let isPlaying = false;
 
 const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -126,9 +144,11 @@ analyser.fftSize = 64;
 
 const bufferLength = analyser.frequencyBinCount;
 const dataArray = new Uint8Array(bufferLength);
+
 audioSource.connect(analyser);
 analyser.connect(audioContext.destination);
 
+// ===== CANVAS WAVEFORM =====
 const canvas = document.createElement('canvas');
 canvas.width = 512;
 canvas.height = 512;
@@ -137,10 +157,12 @@ const ctx = canvas.getContext('2d', { alpha: true });
 const canvasTexture = new THREE.CanvasTexture(canvas);
 canvasTexture.minFilter = THREE.LinearFilter;
 canvasTexture.magFilter = THREE.LinearFilter;
+
 canvasTexture.center.set(0.5, 0.5);
 canvasTexture.repeat.set(-1, -1);
 canvasTexture.offset.set(0, -0.15);
 
+// ===== VIDEO SETUP =====
 const video = document.createElement('video');
 video.src = `${ASSET_BASE}/assets/video/boombox-idle-v2.mp4`;
 video.loop = true;
@@ -151,20 +173,23 @@ video.crossOrigin = "anonymous";
 const videoTexture = new THREE.VideoTexture(video);
 videoTexture.minFilter = THREE.LinearFilter;
 videoTexture.magFilter = THREE.LinearFilter;
+
 videoTexture.center.set(0.5, 0.5);
 videoTexture.repeat.set(1, -1);
 videoTexture.offset.set(0, 0);
 
-video.play().catch(() => {});
+video.play().catch(err => {});
 
 function drawWaveform() {
-  if (!isPlaying) return;
+  if (!isPlaying) {
+    return;
+  }
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   analyser.getByteFrequencyData(dataArray);
 
   const barCount = 28;
-  const halfBars = 14;
+  const halfBars = Math.floor(barCount / 2);
   const barWidth = canvas.width / barCount;
   const barSpacing = 3;
   const segmentHeight = 12;
@@ -177,15 +202,17 @@ function drawWaveform() {
     const dataIndex = Math.floor(i * bufferLength / halfBars);
     const value = dataArray[dataIndex] / 255;
     const totalBarHeight = value * canvas.height * 0.85;
-    const numSegments = Math.floor(totalBarHeight / 15);
+    const numSegments = Math.floor(totalBarHeight / (segmentHeight + segmentGap));
     const w = barWidth - barSpacing;
 
-    const xLeft = (14 - i - 1) * barWidth + 1.5;
-    const xRight = (14 + i) * barWidth + 1.5;
+    const centerIndex = barCount / 2;
+    const xLeft = (centerIndex - i - 1) * barWidth + barSpacing / 2;
+    const xRight = (centerIndex + i) * barWidth + barSpacing / 2;
 
     for (let j = 0; j < numSegments; j++) {
-      const y = canvas.height - (j + 1) * 15;
+      const y = canvas.height - (j + 1) * (segmentHeight + segmentGap);
       const intensity = 0.5 + (j / numSegments) * 0.5;
+
       const r = Math.floor(255 * intensity);
       const g = Math.floor(212 * intensity);
       const b = Math.floor(65 * intensity);
@@ -200,21 +227,18 @@ function drawWaveform() {
   canvasTexture.needsUpdate = true;
 }
 
-// ===== ANIMATION VARS =====
+// ===== ANIMATION MIXER =====
 let mixer = null;
 let tapeAction = null;
 const clock = new THREE.Clock();
 
+// ===== BUTTON REFERENCES & GSAP =====
 let playButton = null;
 let pauseButton = null;
 const buttonInitialRotations = new Map();
+
 let speaker1Material = null;
 let speaker2Material = null;
-let boombox = null;
-
-const mouse = { x: 0, y: 0 };
-const targetRotation = { x: 0, y: 0 };
-const currentRotation = { x: 0, y: 0 };
 
 const gsap = {
   to: (target, props) => {
@@ -231,8 +255,11 @@ const gsap = {
       if (props.y !== undefined) target.y = start.y + (props.y - start.y) * eased;
       if (props.z !== undefined) target.z = start.z + (props.z - start.z) * eased;
 
-      if (progress < 1) requestAnimationFrame(animate);
-      else if (props.onComplete) props.onComplete();
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else if (props.onComplete) {
+        props.onComplete();
+      }
     }
     animate();
   }
@@ -249,36 +276,110 @@ function animateButton(button, targetRotation) {
   });
 }
 
-// ===== INPUT HANDLING =====
-function updateMouse(x, y, rect) {
-  mouse.x = Math.max(-1, Math.min(1, ((x - rect.left) / rect.width) * 2 - 1));
-  mouse.y = Math.max(-1, Math.min(1, ((y - rect.top) / rect.height) * 2 - 1));
-  targetRotation.y = mouse.x * THREE.MathUtils.degToRad(20);
-  targetRotation.x = mouse.y * THREE.MathUtils.degToRad(10);
-}
+// ===== MOUSE TRACKING =====
+const mouse = { x: 0, y: 0 };
+const targetRotation = { x: 0, y: 0 };
+const currentRotation = { x: 0, y: 0 };
 
 window.addEventListener('mousemove', (event) => {
+  const container = document.getElementById('canvas-container');
+  if (!container) return;
+  
   const rect = container.getBoundingClientRect();
-  if (rect.top < window.innerHeight && rect.bottom > 0) {
-    updateMouse(event.clientX, event.clientY, rect);
+  const isVisible = rect.top < window.innerHeight && rect.bottom > 0;
+  
+  if (!isVisible) {
+    return;
   }
+  
+  mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+  mouse.y = ((event.clientY - rect.top) / rect.height) * 2 - 1;
+  
+  mouse.x = Math.max(-1, Math.min(1, mouse.x));
+  mouse.y = Math.max(-1, Math.min(1, mouse.y));
+
+  targetRotation.y = mouse.x * THREE.MathUtils.degToRad(20);
+  targetRotation.x = mouse.y * THREE.MathUtils.degToRad(10);
 });
 
-window.addEventListener('touchmove', (event) => {
-  const touch = event.touches[0];
+// ===== TOUCH TRACKING =====
+let isTouching = false;
+let lastTouchX = 0;
+let lastTouchY = 0;
+
+window.addEventListener('touchstart', (event) => {
+  const container = document.getElementById('canvas-container');
+  if (!container) return;
+  
+  const button = document.getElementById('custom-cursor');
+  if (button && event.target.closest('#custom-cursor')) {
+    return;
+  }
+  
   const rect = container.getBoundingClientRect();
-  updateMouse(touch.clientX, touch.clientY, rect);
+  const touch = event.touches[0];
+  
+  const isInsideContainer = 
+    touch.clientX >= rect.left && 
+    touch.clientX <= rect.right && 
+    touch.clientY >= rect.top && 
+    touch.clientY <= rect.bottom;
+  
+  if (isInsideContainer) {
+    isTouching = true;
+    lastTouchX = touch.clientX;
+    lastTouchY = touch.clientY;
+    
+    mouse.x = ((touch.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = ((touch.clientY - rect.top) / rect.height) * 2 - 1;
+    mouse.x = Math.max(-1, Math.min(1, mouse.x));
+    mouse.y = Math.max(-1, Math.min(1, mouse.y));
+  }
 }, { passive: true });
 
+window.addEventListener('touchmove', (event) => {
+  if (!isTouching) return;
+  
+  const container = document.getElementById('canvas-container');
+  if (!container) return;
+  
+  const rect = container.getBoundingClientRect();
+  const touch = event.touches[0];
+  
+  mouse.x = ((touch.clientX - rect.left) / rect.width) * 2 - 1;
+  mouse.y = ((touch.clientY - rect.top) / rect.height) * 2 - 1;
+  
+  mouse.x = Math.max(-1, Math.min(1, mouse.x));
+  mouse.y = Math.max(-1, Math.min(1, mouse.y));
+
+  targetRotation.y = mouse.x * THREE.MathUtils.degToRad(20);
+  targetRotation.x = mouse.y * THREE.MathUtils.degToRad(10);
+  
+  lastTouchX = touch.clientX;
+  lastTouchY = touch.clientY;
+}, { passive: true });
+
+window.addEventListener('touchend', () => {
+  isTouching = false;
+});
+
+window.addEventListener('touchcancel', () => {
+  isTouching = false;
+});
+
+// ===== TEXT ANIMATION =====
 function updateCursorText() {
   const cursorText = document.getElementById('cursor-text');
   if (!cursorText) return;
   
   const newText = isPlaying ? 'PAUSE MESSAGE' : 'PLAY MESSAGE';
+  
   if (cursorText.textContent.trim() === newText) return;
 
   cursorText.innerHTML = '';
-  newText.split('').forEach((letter, index) => {
+  const letters = newText.split('');
+
+  letters.forEach((letter, index) => {
     if (letter === ' ') {
       const space = document.createElement('span');
       space.innerHTML = '&nbsp;';
@@ -287,44 +388,73 @@ function updateCursorText() {
       cursorText.appendChild(space);
       return;
     }
+    
     const wrapper = document.createElement('span');
     wrapper.className = 'letter-wrapper';
-    
-    const s1 = document.createElement('span'); s1.className = 'letter'; s1.textContent = letter;
-    const s2 = document.createElement('span'); s2.className = 'letter'; s2.textContent = letter;
-    wrapper.append(s1, s2);
+
+    const span1 = document.createElement('span');
+    span1.className = 'letter';
+    span1.textContent = letter;
+    wrapper.appendChild(span1);
+
+    const span2 = document.createElement('span');
+    span2.className = 'letter';
+    span2.textContent = letter;
+    wrapper.appendChild(span2);
+
     cursorText.appendChild(wrapper);
+
     setTimeout(() => wrapper.classList.add('animate'), index * 50);
   });
 }
 
-// ===== LOAD MODEL =====
+// ===== MODEL LOADER =====
+let boombox = null;
+
 const loader = new GLTFLoader(loadingManager);
-loader.load(`${ASSET_BASE}/assets/models/Boombox-01.glb`, (gltf) => {
+loader.load(
+  `${ASSET_BASE}/assets/models/Boombox-01.glb`,
+  (gltf) => {
     boombox = gltf.scene;
     const box = new THREE.Box3().setFromObject(boombox);
-    boombox.position.sub(box.getCenter(new THREE.Vector3()));
-    boombox.position.y = -(box.max.y - box.min.y) / 2 - 2;
+    const center = box.getCenter(new THREE.Vector3());
+    boombox.position.sub(center);
+
+    const boxHeight = box.max.y - box.min.y;
+    boombox.position.y = -boxHeight / 2 - 2;
 
     gltf.scene.traverse((child) => {
       if (child.name === 'play-button') {
         playButton = child;
-        buttonInitialRotations.set(playButton, { ...child.rotation });
-      } else if (child.name === 'pause-button') {
+        buttonInitialRotations.set(playButton, { 
+          x: child.rotation.x, 
+          y: child.rotation.y, 
+          z: child.rotation.z 
+        });
+      }
+      if (child.name === 'pause-button') {
         pauseButton = child;
-        buttonInitialRotations.set(pauseButton, { ...child.rotation });
-      } else if (child.isMesh) {
+        buttonInitialRotations.set(pauseButton, { 
+          x: child.rotation.x, 
+          y: child.rotation.y, 
+          z: child.rotation.z 
+        });
+      }
+      if (child.isMesh) {
         if (child.name === 'Speakers_001' || child.name === 'Speakers_002') {
-          const mat = child.material.clone();
-          mat.map = videoTexture;
-          mat.emissive = new THREE.Color(0x444444);
-          mat.emissiveMap = videoTexture;
-          mat.emissiveIntensity = 8.0;
-          mat.transparent = true;
-          child.material = mat;
+          const originalMaterial = child.material.clone();
+          
+          originalMaterial.map = videoTexture;
+          originalMaterial.emissive = new THREE.Color(0x444444);
+          originalMaterial.emissiveMap = videoTexture;
+          originalMaterial.emissiveIntensity = 8.0;
+          originalMaterial.transparent = true;
+          
+          child.material = originalMaterial;
           child.material.needsUpdate = true;
-          if (child.name === 'Speakers_001') speaker1Material = mat;
-          if (child.name === 'Speakers_002') speaker2Material = mat;
+          
+          if (child.name === 'Speakers_001') speaker1Material = originalMaterial;
+          if (child.name === 'Speakers_002') speaker2Material = originalMaterial;
         } else if (child.material) {
           child.material.envMapIntensity = 1.5;
           child.material.needsUpdate = true;
@@ -332,7 +462,7 @@ loader.load(`${ASSET_BASE}/assets/models/Boombox-01.glb`, (gltf) => {
       }
     });
 
-    if (gltf.animations?.length > 0) {
+    if (gltf.animations && gltf.animations.length > 0) {
       mixer = new THREE.AnimationMixer(boombox);
       tapeAction = mixer.clipAction(gltf.animations[0]);
       tapeAction.loop = THREE.LoopRepeat;
@@ -340,40 +470,53 @@ loader.load(`${ASSET_BASE}/assets/models/Boombox-01.glb`, (gltf) => {
     }
 
     scene.add(boombox);
+
     boombox.rotation.y = THREE.MathUtils.degToRad(20);
     boombox.rotation.x = THREE.MathUtils.degToRad(-10);
+    
     currentRotation.y = THREE.MathUtils.degToRad(20);
     currentRotation.x = THREE.MathUtils.degToRad(-10);
     
     handleResponsiveness();
     drawWaveform();
+    
     setupButton();
     updateCursorText();
-  }, undefined, () => {});
+  },
+  undefined,
+  (error) => {}
+);
 
-// ===== AUDIO LOGIC =====
+// ===== AUDIO ENDED EVENT =====
 audio.addEventListener("ended", () => {
   isPlaying = false;
   if (tapeAction) tapeAction.paused = true;
   animateButton(playButton, 0);
   
-  const resetMat = (mat) => {
-      if(!mat) return;
-      mat.map = videoTexture;
-      mat.emissiveMap = videoTexture;
-      mat.emissive.set(0x444444);
-      mat.emissiveIntensity = 8.0;
-      mat.needsUpdate = true;
-  };
-  resetMat(speaker1Material);
-  resetMat(speaker2Material);
+  if (speaker1Material) {
+    speaker1Material.map = videoTexture;
+    speaker1Material.emissiveMap = videoTexture;
+    speaker1Material.emissive.set(0x444444);
+    speaker1Material.emissiveIntensity = 8.0;
+    speaker1Material.needsUpdate = true;
+  }
+  if (speaker2Material) {
+    speaker2Material.map = videoTexture;
+    speaker2Material.emissiveMap = videoTexture;
+    speaker2Material.emissive.set(0x444444);
+    speaker2Material.emissiveIntensity = 8.0;
+    speaker2Material.needsUpdate = true;
+  }
+  
   video.play();
+  
   updateCursorText();
 });
 
+// ===== AUDIO TOGGLE LOGIC =====
 function toggleAudio() {
   if (audioContext.state === "suspended") {
-    audioContext.resume().then(performToggle);
+    audioContext.resume().then(() => performToggle()).catch(() => {});
   } else {
     performToggle();
   }
@@ -386,7 +529,9 @@ function performToggle() {
     if (pauseButton) animateButton(pauseButton, 16);
     isPlaying = false;
   } else {
-    audio.play().then(() => {
+    const playPromise = audio.play();
+    if (playPromise !== undefined) {
+      playPromise.then(() => {
         if (tapeAction) {
           if (!tapeAction.isRunning()) tapeAction.play();
           tapeAction.paused = false;
@@ -395,66 +540,49 @@ function performToggle() {
         animateButton(playButton, 16);
         isPlaying = true;
         
-        const setCanvasMat = (mat) => {
-            if(!mat) return;
-            mat.map = canvasTexture;
-            mat.emissiveMap = canvasTexture;
-            mat.emissive.set(0xffd441);
-            mat.emissiveIntensity = 1.5;
-            mat.needsUpdate = true;
-        };
-        setCanvasMat(speaker1Material);
-        setCanvasMat(speaker2Material);
+        if (speaker1Material) {
+          speaker1Material.map = canvasTexture;
+          speaker1Material.emissiveMap = canvasTexture;
+          speaker1Material.emissive.set(0xffd441);
+          speaker1Material.emissiveIntensity = 1.5;
+          speaker1Material.needsUpdate = true;
+        }
+        if (speaker2Material) {
+          speaker2Material.map = canvasTexture;
+          speaker2Material.emissiveMap = canvasTexture;
+          speaker2Material.emissive.set(0xffd441);
+          speaker2Material.emissiveIntensity = 1.5;
+          speaker2Material.needsUpdate = true;
+        }
         
         video.pause();
+        
         updateCursorText();
-      }).catch(() => {});
+      }).catch(error => {});
+    }
   }
   updateCursorText();
 }
 
+// ===== BUTTON CLICK SETUP =====
 function setupButton() {
   const btn = document.getElementById('custom-cursor');
-  if (btn) btn.onclick = (e) => { e.stopPropagation(); toggleAudio(); };
-}
-
-// ===== RESIZE HANDLING =====
-function handleResponsiveness() {
-  if (!boombox) return;
-  if (shouldRotateBoombox()) {
-    boombox.rotation.z = THREE.MathUtils.degToRad(90);
-    boombox.scale.setScalar(0.6);
-  } else if (isTouchDevice()) {
-    boombox.rotation.z = 0;
-    boombox.scale.setScalar(0.8);
-  } else {
-    boombox.rotation.z = 0;
-    boombox.scale.setScalar(1);
-  }
   
-  const box = new THREE.Box3().setFromObject(boombox);
-  boombox.position.sub(box.getCenter(new THREE.Vector3()));
+  if (btn) {
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      toggleAudio();
+    };
+  }
 }
 
-let resizeTimeout;
-window.addEventListener('resize', () => {
-  clearTimeout(resizeTimeout);
-  resizeTimeout = setTimeout(() => {
-    const w = container.clientWidth;
-    const h = container.clientHeight;
-    
-    camera.aspect = w / h;
-    camera.updateProjectionMatrix();
-    renderer.setSize(w, h);
-    composer.setSize(w, h);
-    camera.position.z = isTablet() ? 10 : 13;
-    
-    handleResponsiveness();
-  }, 150);
-});
-
-// ===== RENDER LOOP & LIFECYCLE =====
-function render() {
+// ===== ANIMATION LOOP =====
+function animate() {
+  requestAnimationFrame(animate);
+  
+  // Only render when visible
+  if (!isVisible) return;
+  
   const delta = clock.getDelta();
 
   if (mixer && isPlaying) mixer.update(delta);
@@ -468,12 +596,78 @@ function render() {
   }
   composer.render();
 }
+animate();
 
-function setupLifecycle() {
+// ===== RESIZE & RESPONSIVENESS =====
+function handleResponsiveness() {
+  if (!boombox) return;
+  
+  if (shouldRotateBoombox()) {
+    boombox.rotation.z = THREE.MathUtils.degToRad(90);
+    boombox.scale.set(0.6, 0.6, 0.6);
+  } else if (isTouchDevice()) {
+    boombox.rotation.z = 0;
+    boombox.scale.set(0.8, 0.8, 0.8);
+  } else {
+    boombox.rotation.z = 0;
+    boombox.scale.set(1, 1, 1);
+  }
+  
+  const box = new THREE.Box3().setFromObject(boombox);
+  const center = box.getCenter(new THREE.Vector3());
+  boombox.position.sub(center);
+}
+
+let previousWidth = window.innerWidth;
+let resizeTimeout;
+
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimeout);
+  
+  resizeTimeout = setTimeout(() => {
+    const currentWidth = window.innerWidth;
+    
+    if (Math.abs(currentWidth - previousWidth) > 10) {
+      previousWidth = currentWidth;
+      
+      const container = document.getElementById('canvas-container');
+      const containerWidth = container.clientWidth;
+      const containerHeight = container.clientHeight;
+      
+      camera.aspect = containerWidth / containerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(containerWidth, containerHeight);
+      composer.setSize(containerWidth, containerHeight);
+      
+      const cameraZ = isTablet() ? 10 : 13;
+      camera.position.z = cameraZ;
+      
+      handleResponsiveness();
+    }
+  }, 150);
+});
+
+let isVisible = true;
+
+function setupIntersectionObserver() {
+  const container = document.getElementById('canvas-container');
   if (!container) return;
 
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        renderer.setAnimationLoop(render);
-        if (!isPlaying && video.paused) {
+      isVisible = entry.isIntersecting;
+      
+      // Optional: pause audio when not visible
+      if (!isVisible && isPlaying) {
+        audio.pause();
+        if (tapeAction) tapeAction.paused = true;
+      }
+    });
+  }, {
+    threshold: 0.1
+  });
+
+  observer.observe(container);
+}
+
+setupIntersectionObserver();
